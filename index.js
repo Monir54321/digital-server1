@@ -160,7 +160,15 @@ app.get("/api/nid", async (req, res) => {
     );
 
     const data = await response.json();
-    res.json(data);
+    if (data?.message === "সার্ভারে খুঁজে পাওয়া যায়নি" || !data?.nationalId) {
+      // throw new Error("সার্ভারে খুঁজে পাওয়া যায়নি");
+      res.json({ message: "সার্ভারে খুঁজে পাওয়া যায়নি", success: false });
+    }
+
+    if (data?.nationalId) {
+      res.json(data);
+    }
+    
   } catch (error) {
     res.status(500).json({ error: "Failed to fetch data" });
   }
@@ -222,12 +230,10 @@ app.post("/autoNid", async (req, res) => {
       { new: true }
     );
 
-    res
-      .status(200)
-      .json({
-        message: "User amount updated successfully.",
-        status: "Success",
-      });
+    res.status(200).json({
+      message: "User amount updated successfully.",
+      status: "Success",
+    });
   } catch (error) {
     console.error("Error creating auto nid:", error);
     res.status(500).json({ error: "Internal server error." });
