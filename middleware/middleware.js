@@ -3,6 +3,7 @@ const globals = require("node-global-storage");
 
 const bkashAuth = async (req, res, next) => {
   globals.unsetValue("id_token");
+  globals.unsetValue("email");
 
   try {
     const { data } = await axios.post(

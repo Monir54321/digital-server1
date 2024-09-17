@@ -168,7 +168,6 @@ app.get("/api/nid", async (req, res) => {
     if (data?.nationalId) {
       res.json(data);
     }
-    
   } catch (error) {
     res.status(500).json({ error: "Failed to fetch data" });
   }

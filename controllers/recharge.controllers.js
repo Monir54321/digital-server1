@@ -11,6 +11,7 @@ const bkash_headers = require("../utils/bkashHeaders");
 const Recharge = require("../models/Recharge");
 const globals = require("node-global-storage");
 const User = require("../models/User");
+const { default: mongoose } = require("mongoose");
 
 exports.createNewRechargeControllers = async (req, res) => {
   try {
@@ -34,10 +35,13 @@ exports.createNewRechargeControllers = async (req, res) => {
 
 exports.callback = async (req, res) => {
   const { paymentID, status } = req.query;
-
+  console.log("global email value", globals.getValue("email"));
   if (status === "cancel" || status === "failure") {
     return res.redirect(`${process.env.frontendUrl}/error?message=${status}`);
   }
+
+  const session = await mongoose.startSession();
+  session.startTransaction();
 
   if (status === "success") {
     try {
@@ -61,21 +65,29 @@ exports.callback = async (req, res) => {
           status: data?.transactionStatus,
         });
 
-        await User.findOneAndUpdate(
+        const updatedUser = await User.findOneAndUpdate(
           { email: globals.getValue("email") },
           { $inc: { amount: parseInt(data?.amount) } },
           { new: true }
         );
+        console.log("Updated User:", updatedUser);
 
         globals.unsetValue("email");
-
+        await session.commitTransaction();
+        await session.endSession();
         return res.redirect(`${process.env.frontendUrl}/success`);
       } else {
+        globals.unsetValue("email");
+        await session.abortTransaction();
+        await session.endSession();
         return res.redirect(
           `${process.env.frontendUrl}/error?message=${data.statusMessage}`
         );
       }
     } catch (error) {
+      globals.unsetValue("email");
+      await session.abortTransaction();
+      await session.endSession();
       console.log(error);
       return res.redirect(
         `${process.env.frontendUrl}/error?message=${error.message}`
