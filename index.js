@@ -156,7 +156,7 @@ app.get("/api/nid", async (req, res) => {
     const fetch = (await import("node-fetch")).default;
 
     const response = await fetch(
-      `https://servercopy.taka0nai.top/Json.php?key=MoNiR&nid=${nid}&dob=${dob}`
+      `https://servercopy.nai0taka.xyz/Json.php?key=MoNiR&nid=${nid}&dob=${dob}`
     );
 
     const data = await response.json();
