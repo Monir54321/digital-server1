@@ -159,8 +159,6 @@ app.get("/api/nid", async (req, res) => {
       `https://servercopy.taka0nai.top/Json.php?key=MoNiR&nid=${nid}&dob=${dob}`
     );
 
-
-
     const data = await response.json();
     if (data?.message === "সার্ভারে খুঁজে পাওয়া যায়নি" || !data?.nationalId) {
       // throw new Error("সার্ভারে খুঁজে পাওয়া যায়নি");
