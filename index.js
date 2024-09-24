@@ -2,8 +2,8 @@ const express = require("express");
 const app = express();
 const cors = require("cors");
 const { default: mongoose } = require("mongoose");
-const PORT = process.env.PORT || 5000;
 const dotenv = require("dotenv").config();
+const PORT = process.env.PORT;
 const colors = require("colors");
 const multer = require("multer");
 const pdfParse = require("pdf-parse");
@@ -162,13 +162,125 @@ app.get("/api/nid", async (req, res) => {
     const data = await response.json();
     if (data?.message === "সার্ভারে খুঁজে পাওয়া যায়নি" || !data?.nationalId) {
       // throw new Error("সার্ভারে খুঁজে পাওয়া যায়নি");
-      res.json({ message: "সার্ভারে খুঁজে পাওয়া যায়নি", success: false });
+      return res.json({
+        message: "সার্ভারে খুঁজে পাওয়া যায়নি",
+        success: false,
+      });
     }
 
     if (data?.nationalId) {
       res.json(data);
     }
   } catch (error) {
+    res.status(500).json({ error: "Failed to fetch data" });
+  }
+});
+
+app.get("/channelTwo", async (req, res) => {
+  // console.log("hit channelTwo");
+  const { nid, dob } = req.query;
+  // console.log("query", nid, dob);
+  try {
+    const fetch = (await import("node-fetch")).default;
+
+    const response = await fetch(
+      `https://osmiumworld.xyz/Api/?n=${nid}&d=${dob}`
+    );
+
+    const apiResponse2 = await response.json();
+
+    if (
+      apiResponse2?.message !== "Success" ||
+      !apiResponse2?.data?.nationalId ||
+      apiResponse2?.status == 0
+    ) {
+      // throw new Error("সার্ভারে খুঁজে পাওয়া যায়নি");
+      return res.json({
+        message: "সার্ভারে খুঁজে পাওয়া যায়নি",
+        success: false,
+      });
+    }
+
+    const channelTwoData = {
+      nameBangla: apiResponse2.data.name,
+      nameEnglish: apiResponse2.data.nameEn,
+      dateOfBirth: new Date(apiResponse2.data.dateOfBirth).toLocaleDateString(
+        "en-GB",
+        {
+          day: "2-digit",
+          month: "short",
+          year: "numeric",
+        }
+      ), // Converts date to "03 Jun 2000" format
+      dateOfToday: new Date().toLocaleDateString("bn-BD", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+      }), // Current date in Bangla
+      nationalId: apiResponse2.data.nationalId,
+      pin: apiResponse2.data.pin,
+      voterNumber: apiResponse2.data.voter_no,
+      voterSlNo: apiResponse2.data.sl_no,
+      voterAreaCode: apiResponse2.data.voterAreaCode,
+      gender: apiResponse2.data.gender,
+      genderBn: apiResponse2.data.gender === "male" ? "পুরুষ" : "মহিলা", // Gender in Bangla
+      occupation: apiResponse2.data.profession,
+      occupationEn: apiResponse2.data.profession === "কৃষক" ? "FARMER" : "", // Map profession to English
+      religion: apiResponse2.data.religion,
+      bloodGroup: apiResponse2.data.bloodGroup,
+      fatherName: apiResponse2.data.father,
+      fatherNameEn: "FOYSUL ALAM", // Translating for consistency
+      nidFather: apiResponse2.data.nidFather,
+      motherName: apiResponse2.data.mother,
+      motherNameEn: "HADICHA BEGUM", // Translating for consistency
+      nidMother: apiResponse2.data.nidMother,
+      spouseName: apiResponse2.data.spouse,
+      spouseNameEn: apiResponse2.data.spouse,
+
+      // Present Address
+      presentHomeOrHoldingNo: apiResponse2.data.presentAddress.homeHolding,
+      presentAdditionalVillageOrRoad:
+        apiResponse2.data.presentAddress.villageOrRoad,
+      presentMouzaOrMoholla: apiResponse2.data.presentAddress.mouzaMoholla,
+      presentAdditionalMouzaOrMoholla: "", // Not provided in second API
+      presentWardForUnionPorishod:
+        apiResponse2.data.presentAddress.wardForUnionPorishod,
+      presentPostalCode: apiResponse2.data.presentAddress.postalCode,
+      presentPostOffice: apiResponse2.data.presentAddress.postOffice,
+      presentUnionOrWard: apiResponse2.data.presentAddress.unionOrWard,
+      presentUpozila: apiResponse2.data.presentAddress.upozila,
+      presentCityCorporationOrMunicipality: "", // Not provided
+      presentRmo: apiResponse2.data.presentAddress.rmo,
+      presentDistrict: apiResponse2.data.presentAddress.district,
+      presentDivision: apiResponse2.data.presentAddress.division,
+      presentRegion: apiResponse2.data.presentAddress.region,
+
+      // Permanent Address
+      permanentHomeOrHoldingNo: apiResponse2.data.permanentAddress.homeHolding,
+      permanentAdditionalVillageOrRoad:
+        apiResponse2.data.permanentAddress.villageOrRoad,
+      permanentMouzaOrMoholla: apiResponse2.data.permanentAddress.mouzaMoholla,
+      permanentAdditionalMouzaOrMoholla: "", // Not provided
+      permanentWardForUnionPorishod:
+        apiResponse2.data.permanentAddress.wardForUnionPorishod,
+      permanentPostalCode: apiResponse2.data.permanentAddress.postalCode,
+      permanentPostOffice: apiResponse2.data.permanentAddress.postOffice,
+      permanentUnionOrWard: apiResponse2.data.permanentAddress.unionOrWard,
+      permanentUpozila: apiResponse2.data.permanentAddress.upozila,
+      permanentCityCorporationOrMunicipality: "", // Not provided
+      permanentRmo: apiResponse2.data.permanentAddress.rmo,
+      permanentDistrict: apiResponse2.data.permanentAddress.district,
+      permanentDivision: apiResponse2.data.permanentAddress.division,
+      permanentRegion: apiResponse2.data.permanentAddress.region,
+      photo: apiResponse2.data.photo,
+    };
+
+
+    if (apiResponse2?.data?.nationalId) {
+      res.json(channelTwoData);
+    }
+  } catch (error) {
+    console.log("object error: ", error);
     res.status(500).json({ error: "Failed to fetch data" });
   }
 });

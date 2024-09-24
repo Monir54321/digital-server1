@@ -16,8 +16,16 @@ exports.createNewServerCopyService = async (data) => {
       throw new Error("Price list is empty");
     }
 
-    const price = Number(priceList[0]?.serverCopy);
+    let price;
+
+    if (data?.isChannelTwo === "1") {
+      price = Number(priceList[0]?.channelTwoServerCopy);
+    } else {
+      price = Number(priceList[0]?.serverCopy); // Only set this if isChannelTwo is not "1"
+    }
+
     const amount = isExistUser?.amount;
+
 
     if (amount < 0 || amount < price) {
       throw new Error("Insufficient funds");
