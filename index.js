@@ -25,6 +25,7 @@ const nidMakeRoutes = require("./routes/nidMake.routes");
 const priceListRoutes = require("./routes/priceList.routes");
 const signCopyRoutes = require("./routes/signCopy.routes");
 const manageOrderButtonRoutes = require("./routes/manageOrderButton.routes");
+const nameAddressesLostIdRoutes = require("./routes/nameAddressesLostId.routes");
 const { default: axios } = require("axios");
 const User = require("./models/User");
 const PriceList = require("./models/PriceList");
@@ -368,5 +369,6 @@ app.use("/saftyTikas", saftyTikaRoutes);
 app.use("/serverCopys", serverCopysRoutes);
 app.use("/nidMakes", nidMakeRoutes);
 app.use("/manage-order-button", manageOrderButtonRoutes);
+app.use("/nameAddressesLostId", nameAddressesLostIdRoutes);
 
 app.listen(PORT, () => console.log(`Server started on port ${PORT}`));

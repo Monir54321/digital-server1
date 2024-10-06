@@ -78,6 +78,11 @@ const priceListSchema = mongoose.Schema(
       required: true,
       default: 0,
     },
+    nameAddressesLostId:{
+      type: Number,
+      required: true,
+      default: 210,
+    }
   },
   {
     timestamps: true,
