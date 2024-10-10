@@ -177,25 +177,129 @@ app.get("/api/nid", async (req, res) => {
   }
 });
 
+// app.get("/channelTwo", async (req, res) => {
+//   // console.log("hit channelTwo");
+//   const { nid, dob } = req.query;
+//   // console.log("query", nid, dob);
+//   try {
+//     const fetch = (await import("node-fetch")).default;
+
+//     const response = await fetch(
+//       `https://osmiumworld.xyz/Api/?n=${nid}&d=${dob}`
+//     );
+
+//     const apiResponse2 = await response.json();
+
+//     if (
+//       apiResponse2?.message !== "Success" ||
+//       !apiResponse2?.data?.nationalId ||
+//       apiResponse2?.status == 0
+//     ) {
+//       // throw new Error("সার্ভারে খুঁজে পাওয়া যায়নি");
+//       return res.json({
+//         message: "সার্ভারে খুঁজে পাওয়া যায়নি",
+//         success: false,
+//       });
+//     }
+
+//     const channelTwoData = {
+//       nameBangla: apiResponse2.data.name,
+//       nameEnglish: apiResponse2.data.nameEn,
+//       dateOfBirth: new Date(apiResponse2.data.dateOfBirth).toLocaleDateString(
+//         "en-GB",
+//         {
+//           day: "2-digit",
+//           month: "short",
+//           year: "numeric",
+//         }
+//       ), // Converts date to "03 Jun 2000" format
+//       dateOfToday: new Date().toLocaleDateString("bn-BD", {
+//         day: "2-digit",
+//         month: "2-digit",
+//         year: "numeric",
+//       }), // Current date in Bangla
+//       nationalId: apiResponse2.data.nationalId,
+//       pin: apiResponse2.data.pin,
+//       voterNumber: apiResponse2.data.voter_no,
+//       voterSlNo: apiResponse2.data.sl_no,
+//       voterAreaCode: apiResponse2.data.voterAreaCode,
+//       gender: apiResponse2.data.gender,
+//       genderBn: apiResponse2.data.gender === "male" ? "পুরুষ" : "মহিলা", // Gender in Bangla
+//       occupation: apiResponse2.data.profession,
+//       occupationEn: apiResponse2.data.profession === "কৃষক" ? "FARMER" : "", // Map profession to English
+//       religion: apiResponse2.data.religion,
+//       bloodGroup: apiResponse2.data.bloodGroup,
+//       fatherName: apiResponse2.data.father,
+//       fatherNameEn: "FOYSUL ALAM", // Translating for consistency
+//       nidFather: apiResponse2.data.nidFather,
+//       motherName: apiResponse2.data.mother,
+//       motherNameEn: "HADICHA BEGUM", // Translating for consistency
+//       nidMother: apiResponse2.data.nidMother,
+//       spouseName: apiResponse2.data.spouse,
+//       spouseNameEn: apiResponse2.data.spouse,
+
+//       // Present Address
+//       presentHomeOrHoldingNo: apiResponse2.data.presentAddress.homeHolding,
+//       presentAdditionalVillageOrRoad:
+//         apiResponse2.data.presentAddress.villageOrRoad,
+//       presentMouzaOrMoholla: apiResponse2.data.presentAddress.mouzaMoholla,
+//       presentAdditionalMouzaOrMoholla: "", // Not provided in second API
+//       presentWardForUnionPorishod:
+//         apiResponse2.data.presentAddress.wardForUnionPorishod,
+//       presentPostalCode: apiResponse2.data.presentAddress.postalCode,
+//       presentPostOffice: apiResponse2.data.presentAddress.postOffice,
+//       presentUnionOrWard: apiResponse2.data.presentAddress.unionOrWard,
+//       presentUpozila: apiResponse2.data.presentAddress.upozila,
+//       presentCityCorporationOrMunicipality: "", // Not provided
+//       presentRmo: apiResponse2.data.presentAddress.rmo,
+//       presentDistrict: apiResponse2.data.presentAddress.district,
+//       presentDivision: apiResponse2.data.presentAddress.division,
+//       presentRegion: apiResponse2.data.presentAddress.region,
+
+//       // Permanent Address
+//       permanentHomeOrHoldingNo: apiResponse2.data.permanentAddress.homeHolding,
+//       permanentAdditionalVillageOrRoad:
+//         apiResponse2.data.permanentAddress.villageOrRoad,
+//       permanentMouzaOrMoholla: apiResponse2.data.permanentAddress.mouzaMoholla,
+//       permanentAdditionalMouzaOrMoholla: "", // Not provided
+//       permanentWardForUnionPorishod:
+//         apiResponse2.data.permanentAddress.wardForUnionPorishod,
+//       permanentPostalCode: apiResponse2.data.permanentAddress.postalCode,
+//       permanentPostOffice: apiResponse2.data.permanentAddress.postOffice,
+//       permanentUnionOrWard: apiResponse2.data.permanentAddress.unionOrWard,
+//       permanentUpozila: apiResponse2.data.permanentAddress.upozila,
+//       permanentCityCorporationOrMunicipality: "", // Not provided
+//       permanentRmo: apiResponse2.data.permanentAddress.rmo,
+//       permanentDistrict: apiResponse2.data.permanentAddress.district,
+//       permanentDivision: apiResponse2.data.permanentAddress.division,
+//       permanentRegion: apiResponse2.data.permanentAddress.region,
+//       photo: apiResponse2.data.photo,
+//     };
+
+
+//     if (apiResponse2?.data?.nationalId) {
+//       res.json(channelTwoData);
+//     }
+//   } catch (error) {
+//     console.log("object error: ", error);
+//     res.status(500).json({ error: "Failed to fetch data" });
+//   }
+// });
+
+
 app.get("/channelTwo", async (req, res) => {
-  // console.log("hit channelTwo");
   const { nid, dob } = req.query;
-  // console.log("query", nid, dob);
+
   try {
     const fetch = (await import("node-fetch")).default;
 
     const response = await fetch(
-      `https://osmiumworld.xyz/Api/?n=${nid}&d=${dob}`
+      `https://api.blackfiretools.my.id/server/BFT.php?nid=${nid}&dob=${dob}`
     );
 
     const apiResponse2 = await response.json();
 
-    if (
-      apiResponse2?.message !== "Success" ||
-      !apiResponse2?.data?.nationalId ||
-      apiResponse2?.status == 0
-    ) {
-      // throw new Error("সার্ভারে খুঁজে পাওয়া যায়নি");
+    if (apiResponse2?.status !== "success" || !apiResponse2?.data?.nid) {
       return res.json({
         message: "সার্ভারে খুঁজে পাওয়া যায়নি",
         success: false,
@@ -203,88 +307,82 @@ app.get("/channelTwo", async (req, res) => {
     }
 
     const channelTwoData = {
-      nameBangla: apiResponse2.data.name,
+      nameBangla: apiResponse2.data.nameBn,
       nameEnglish: apiResponse2.data.nameEn,
-      dateOfBirth: new Date(apiResponse2.data.dateOfBirth).toLocaleDateString(
+      dateOfBirth: new Date(apiResponse2.data.dob).toLocaleDateString(
         "en-GB",
         {
           day: "2-digit",
           month: "short",
           year: "numeric",
         }
-      ), // Converts date to "03 Jun 2000" format
+      ),
       dateOfToday: new Date().toLocaleDateString("bn-BD", {
         day: "2-digit",
         month: "2-digit",
         year: "numeric",
-      }), // Current date in Bangla
-      nationalId: apiResponse2.data.nationalId,
+      }),
+      nationalId: apiResponse2.data.nid,
       pin: apiResponse2.data.pin,
       voterNumber: apiResponse2.data.voter_no,
       voterSlNo: apiResponse2.data.sl_no,
-      voterAreaCode: apiResponse2.data.voterAreaCode,
+      voterAreaCode: "", // Not provided
       gender: apiResponse2.data.gender,
-      genderBn: apiResponse2.data.gender === "male" ? "পুরুষ" : "মহিলা", // Gender in Bangla
-      occupation: apiResponse2.data.profession,
-      occupationEn: apiResponse2.data.profession === "কৃষক" ? "FARMER" : "", // Map profession to English
-      religion: apiResponse2.data.religion,
+      genderBn: apiResponse2.data.gender === "male" ? "পুরুষ" : "মহিলা",
+      occupation: apiResponse2.data.occupationBn,
+      occupationEn: apiResponse2.data.occupationBn === "কৃষক" ? "FARMER" : "",
+      religion: "", // Not provided
       bloodGroup: apiResponse2.data.bloodGroup,
-      fatherName: apiResponse2.data.father,
-      fatherNameEn: "FOYSUL ALAM", // Translating for consistency
-      nidFather: apiResponse2.data.nidFather,
-      motherName: apiResponse2.data.mother,
-      motherNameEn: "HADICHA BEGUM", // Translating for consistency
-      nidMother: apiResponse2.data.nidMother,
-      spouseName: apiResponse2.data.spouse,
-      spouseNameEn: apiResponse2.data.spouse,
+      fatherName: apiResponse2.data.fatherName,
+      fatherNameEn: "FOYSUL ALAM", // Placeholder
+      nidFather: "", // Not provided
+      motherName: apiResponse2.data.motherName,
+      motherNameEn: "HADICHA BEGUM", // Placeholder
+      nidMother: "", // Not provided
+      spouseName: apiResponse2.data.spouseNameBn,
+      spouseNameEn: apiResponse2.data.spouseNameBn,
 
       // Present Address
       presentHomeOrHoldingNo: apiResponse2.data.presentAddress.homeHolding,
-      presentAdditionalVillageOrRoad:
-        apiResponse2.data.presentAddress.villageOrRoad,
+      presentAdditionalVillageOrRoad: "",
       presentMouzaOrMoholla: apiResponse2.data.presentAddress.mouzaMoholla,
-      presentAdditionalMouzaOrMoholla: "", // Not provided in second API
-      presentWardForUnionPorishod:
-        apiResponse2.data.presentAddress.wardForUnionPorishod,
+      presentAdditionalMouzaOrMoholla: "", // Not provided
+      presentWardForUnionPorishod: "", // Not provided
       presentPostalCode: apiResponse2.data.presentAddress.postalCode,
-      presentPostOffice: apiResponse2.data.presentAddress.postOffice,
-      presentUnionOrWard: apiResponse2.data.presentAddress.unionOrWard,
+      presentPostOffice: apiResponse2.data.presentAddress.postOffic,
+      presentUnionOrWard: "", // Not provided
       presentUpozila: apiResponse2.data.presentAddress.upozila,
       presentCityCorporationOrMunicipality: "", // Not provided
-      presentRmo: apiResponse2.data.presentAddress.rmo,
+      presentRmo: "", // Not provided
       presentDistrict: apiResponse2.data.presentAddress.district,
       presentDivision: apiResponse2.data.presentAddress.division,
       presentRegion: apiResponse2.data.presentAddress.region,
 
       // Permanent Address
       permanentHomeOrHoldingNo: apiResponse2.data.permanentAddress.homeHolding,
-      permanentAdditionalVillageOrRoad:
-        apiResponse2.data.permanentAddress.villageOrRoad,
+      permanentAdditionalVillageOrRoad: "",
       permanentMouzaOrMoholla: apiResponse2.data.permanentAddress.mouzaMoholla,
       permanentAdditionalMouzaOrMoholla: "", // Not provided
-      permanentWardForUnionPorishod:
-        apiResponse2.data.permanentAddress.wardForUnionPorishod,
+      permanentWardForUnionPorishod: "", // Not provided
       permanentPostalCode: apiResponse2.data.permanentAddress.postalCode,
-      permanentPostOffice: apiResponse2.data.permanentAddress.postOffice,
-      permanentUnionOrWard: apiResponse2.data.permanentAddress.unionOrWard,
+      permanentPostOffice: apiResponse2.data.permanentAddress.postOffic,
+      permanentUnionOrWard: "", // Not provided
       permanentUpozila: apiResponse2.data.permanentAddress.upozila,
       permanentCityCorporationOrMunicipality: "", // Not provided
-      permanentRmo: apiResponse2.data.permanentAddress.rmo,
+      permanentRmo: "", // Not provided
       permanentDistrict: apiResponse2.data.permanentAddress.district,
       permanentDivision: apiResponse2.data.permanentAddress.division,
       permanentRegion: apiResponse2.data.permanentAddress.region,
       photo: apiResponse2.data.photo,
     };
 
-
-    if (apiResponse2?.data?.nationalId) {
-      res.json(channelTwoData);
-    }
+    res.json(channelTwoData);
   } catch (error) {
     console.log("object error: ", error);
     res.status(500).json({ error: "Failed to fetch data" });
   }
 });
+
 
 app.get("/api/nid2", async (req, res) => {
   const { nid, dob } = req.query;
