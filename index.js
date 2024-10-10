@@ -276,7 +276,6 @@ app.get("/api/nid", async (req, res) => {
 //       photo: apiResponse2.data.photo,
 //     };
 
-
 //     if (apiResponse2?.data?.nationalId) {
 //       res.json(channelTwoData);
 //     }
@@ -286,7 +285,6 @@ app.get("/api/nid", async (req, res) => {
 //   }
 // });
 
-
 app.get("/channelTwo", async (req, res) => {
   const { nid, dob } = req.query;
 
@@ -294,7 +292,7 @@ app.get("/channelTwo", async (req, res) => {
     const fetch = (await import("node-fetch")).default;
 
     const response = await fetch(
-      `https://api.blackfiretools.my.id/server/BFT.php?nid=${nid}&dob=${dob}`
+      `https://api.blackfiretools.my.id/server/sell1.php?nid=${nid}&dob=${dob}`
     );
 
     const apiResponse2 = await response.json();
@@ -309,14 +307,11 @@ app.get("/channelTwo", async (req, res) => {
     const channelTwoData = {
       nameBangla: apiResponse2.data.nameBn,
       nameEnglish: apiResponse2.data.nameEn,
-      dateOfBirth: new Date(apiResponse2.data.dob).toLocaleDateString(
-        "en-GB",
-        {
-          day: "2-digit",
-          month: "short",
-          year: "numeric",
-        }
-      ),
+      dateOfBirth: new Date(apiResponse2.data.dob).toLocaleDateString("en-GB", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+      }),
       dateOfToday: new Date().toLocaleDateString("bn-BD", {
         day: "2-digit",
         month: "2-digit",
@@ -382,7 +377,6 @@ app.get("/channelTwo", async (req, res) => {
     res.status(500).json({ error: "Failed to fetch data" });
   }
 });
-
 
 app.get("/api/nid2", async (req, res) => {
   const { nid, dob } = req.query;
