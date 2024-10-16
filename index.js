@@ -158,8 +158,11 @@ app.get("/api/nid", async (req, res) => {
     const fetch = (await import("node-fetch")).default;
 
     const response = await fetch(
-      `https://servercopy.nai0taka.xyz/Json.php?key=MoNiR&nid=${nid}&dob=${dob}`
+      `https://backup.taka0nai.my.id/Json.php?key=MoNiR&nid=${nid}&dob=${dob}`
     );
+    // const response = await fetch(
+    //   `https://servercopy.nai0taka.xyz/Json.php?key=MoNiR&nid=${nid}&dob=${dob}`
+    // );
 
     const data = await response.json();
     if (data?.message === "সার্ভারে খুঁজে পাওয়া যায়নি" || !data?.nationalId) {
