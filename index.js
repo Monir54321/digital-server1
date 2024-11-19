@@ -131,7 +131,7 @@ app.post("/upload-pdf", upload.single("pdf_file"), async (req, res) => {
 
     // Make the request to the external API
     const response = await axios.post(
-      "http://185.199.53.240:5952/ext/smartseba24?type=C",
+      "https://eservicecenter.xyz/ext/smartseba24?type=C",
       // "https://photocopyshop.site/ext/smartseba24?type=C",
       // "https://www.esservice-new.my.id/ext/smartseba24?type=C",
       // "https://api24.pythonanywhere.com/ext/monir",
@@ -299,7 +299,8 @@ console.log("channelTwo", nid, dob);
     const fetch = (await import("node-fetch")).default;
 
     const response = await fetch(
-      `https://api.blackfiretools.my.id/server/MONIR.php?key=MONIR&nid=${nid}&dob=${dob}`
+      `https://api.blackfiretools.my.id/server/MONIR.php?key=742545&nid=${nid}&dob=${dob}`
+      // `https://api.blackfiretools.my.id/server/MONIR.php?key=MONIR&nid=${nid}&dob=${dob}`
       // `https://api.blackfiretools.my.id/server/sell1.php?nid=${nid}&dob=${dob}`
     );
 
