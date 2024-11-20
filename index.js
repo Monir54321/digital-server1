@@ -294,7 +294,6 @@ app.get("/api/nid", async (req, res) => {
 
 app.get("/channelTwo", async (req, res) => {
   const { nid, dob } = req.query;
-console.log("channelTwo", nid, dob);
   try {
     const fetch = (await import("node-fetch")).default;
 
@@ -306,152 +305,84 @@ console.log("channelTwo", nid, dob);
 
     const apiResponse2 = await response.json();
 
-    if (apiResponse2?.Success !== "true" || !apiResponse2?.nationalId) {
+
+    if (apiResponse2?.code !== 200 || !apiResponse2?.data?.nationalId) {
       return res.json({
         message: "সার্ভারে খুঁজে পাওয়া যায়নি",
         success: false,
       });
     }
-    const channelTwoData = {
-      nameBangla: apiResponse2.nameBangla,
-      nameEnglish: apiResponse2.nameEnglish,
-      dateOfBirth: new Date(apiResponse2.dateOfBirth).toLocaleDateString("en-GB", {
-        day: "2-digit",
-        month: "short",
-        year: "numeric",
-      }),
-      dateOfToday: new Date(apiResponse2.dateOfToday).toLocaleDateString("bn-BD", {
-        day: "2-digit",
-        month: "2-digit",
-        year: "numeric",
-      }),
-      nationalId: apiResponse2.nationalId,
-      pin: apiResponse2.pin,
-      voterNumber: apiResponse2.voterArea,
-      voterSlNo: apiResponse2.sl_no,
-      voterAreaCode: apiResponse2.voterAreaCode || "", // Add default if not provided
-      gender: apiResponse2.genderEnglish,
-      genderBn: apiResponse2.genderBangla,
-      occupation: apiResponse2.occupationBangla,
-      occupationEn: apiResponse2.occupationEnglish,
-      religion: apiResponse2.religion || "", // Add default if not provided
-      bloodGroup: apiResponse2.bloodGroup,
-      fatherName: apiResponse2.fatherName,
-      fatherNameEn: "FOYSUL ALAM", // Placeholder
-      nidFather: "", // Not provided
-      motherName: apiResponse2.motherName,
-      motherNameEn: "HADICHA BEGUM", // Placeholder
-      nidMother: "", // Not provided
-      spouseName: apiResponse2.spouse,
-      spouseNameEn: apiResponse2.spouse,
-    
-      // Present Address
-      presentHomeOrHoldingNo: apiResponse2.presentHouseHolding,
-      presentAdditionalVillageOrRoad: "",
-      presentMouzaOrMoholla: apiResponse2.presentMouzaMoholla,
-      presentAdditionalMouzaOrMoholla: "",
-      presentWardForUnionPorishod: "",
-      presentPostalCode: "", // Not provided
-      presentPostOffice: "", // Not provided
-      presentUnionOrWard: "",
-      presentUpozila: apiResponse2.presentUpozila,
-      presentCityCorporationOrMunicipality: "",
-      presentRmo: "",
-      presentDistrict: apiResponse2.presentDistrict,
-      presentDivision: apiResponse2.presentDivision,
-      presentRegion: "",
-      presentFullAddress:apiResponse2.presentFullAddress,
-    
-      // Permanent Address
-      permanentHomeOrHoldingNo: apiResponse2.permanentHouseHolding,
-      permanentAdditionalVillageOrRoad: "",
-      permanentMouzaOrMoholla: apiResponse2.permanentMouzaMoholla,
-      permanentAdditionalMouzaOrMoholla: "",
-      permanentWardForUnionPorishod: "",
-      permanentPostalCode: "", // Not provided
-      permanentPostOffice: "", // Not provided
-      permanentUnionOrWard: "",
-      permanentUpozila: apiResponse2.permanentUpozila,
-      permanentCityCorporationOrMunicipality: "",
-      permanentRmo: "",
-      permanentDistrict: apiResponse2.permanentDistrict,
-      permanentDivision: apiResponse2.permanentDivision,
-      permanentRegion: "",
-      photo: apiResponse2.photo,
-      permanentFullAddress:apiResponse2.permanentFullAddress
-    };
-
-
-    
-
-    res.json(channelTwoData);
-
+    const result = apiResponse2?.data;
     // const channelTwoData = {
-    //   nameBangla: apiResponse2.data.nameBn,
-    //   nameEnglish: apiResponse2.data.nameEn,
-    //   dateOfBirth: new Date(apiResponse2.data.dob).toLocaleDateString("en-GB", {
+    //   nameBangla: result.nameBangla,
+    //   nameEnglish: result.nameEnglish,
+    //   dateOfBirth: new Date(result.dateOfBirth).toLocaleDateString("en-GB", {
     //     day: "2-digit",
     //     month: "short",
     //     year: "numeric",
     //   }),
-    //   dateOfToday: new Date().toLocaleDateString("bn-BD", {
+    //   dateOfToday: new Date(result.dateOfToday).toLocaleDateString("bn-BD", {
     //     day: "2-digit",
     //     month: "2-digit",
     //     year: "numeric",
     //   }),
-    //   nationalId: apiResponse2.data.nid,
-    //   pin: apiResponse2.data.pin,
-    //   voterNumber: apiResponse2.data.voter_no,
-    //   voterSlNo: apiResponse2.data.sl_no,
-    //   voterAreaCode: "", // Not provided
-    //   gender: apiResponse2.data.gender,
-    //   genderBn: apiResponse2.data.gender === "male" ? "পুরুষ" : "মহিলা",
-    //   occupation: apiResponse2.data.occupationBn,
-    //   occupationEn: apiResponse2.data.occupationBn === "কৃষক" ? "FARMER" : "",
-    //   religion: "", // Not provided
-    //   bloodGroup: apiResponse2.data.bloodGroup,
-    //   fatherName: apiResponse2.data.fatherName,
+    //   nationalId: result.nationalId,
+    //   pin: result.pin,
+    //   voterNumber: result.voterArea,
+    //   voterSlNo: result.sl_no,
+    //   voterAreaCode: result.voterAreaCode || "", // Add default if not provided
+    //   gender: result.genderEnglish,
+    //   genderBn: result.genderBangla,
+    //   occupation: result.occupationBangla,
+    //   occupationEn: result.occupationEnglish,
+    //   religion: result.religion || "", // Add default if not provided
+    //   bloodGroup: result.bloodGroup,
+    //   fatherName: result.fatherName,
     //   fatherNameEn: "FOYSUL ALAM", // Placeholder
     //   nidFather: "", // Not provided
-    //   motherName: apiResponse2.data.motherName,
+    //   motherName: result.motherName,
     //   motherNameEn: "HADICHA BEGUM", // Placeholder
     //   nidMother: "", // Not provided
-    //   spouseName: apiResponse2.data.spouseNameBn,
-    //   spouseNameEn: apiResponse2.data.spouseNameBn,
-
+    //   spouseName: result.spouse,
+    //   spouseNameEn: result.spouse,
+    
     //   // Present Address
-    //   presentHomeOrHoldingNo: apiResponse2.data.presentAddress.homeHolding,
+    //   presentHomeOrHoldingNo: result.presentHouseHolding,
     //   presentAdditionalVillageOrRoad: "",
-    //   presentMouzaOrMoholla: apiResponse2.data.presentAddress.mouzaMoholla,
-    //   presentAdditionalMouzaOrMoholla: "", // Not provided
-    //   presentWardForUnionPorishod: "", // Not provided
-    //   presentPostalCode: apiResponse2.data.presentAddress.postalCode,
-    //   presentPostOffice: apiResponse2.data.presentAddress.postOffic,
-    //   presentUnionOrWard: "", // Not provided
-    //   presentUpozila: apiResponse2.data.presentAddress.upozila,
-    //   presentCityCorporationOrMunicipality: "", // Not provided
-    //   presentRmo: "", // Not provided
-    //   presentDistrict: apiResponse2.data.presentAddress.district,
-    //   presentDivision: apiResponse2.data.presentAddress.division,
-    //   presentRegion: apiResponse2.data.presentAddress.region,
-
+    //   presentMouzaOrMoholla: result.presentMouzaMoholla,
+    //   presentAdditionalMouzaOrMoholla: "",
+    //   presentWardForUnionPorishod: "",
+    //   presentPostalCode: "", // Not provided
+    //   presentPostOffice: "", // Not provided
+    //   presentUnionOrWard: "",
+    //   presentUpozila: result.presentUpozila,
+    //   presentCityCorporationOrMunicipality: "",
+    //   presentRmo: "",
+    //   presentDistrict: result.presentDistrict,
+    //   presentDivision: result.presentDivision,
+    //   presentRegion: "",
+    //   presentFullAddress:result.presentFullAddress,
+    
     //   // Permanent Address
-    //   permanentHomeOrHoldingNo: apiResponse2.data.permanentAddress.homeHolding,
+    //   permanentHomeOrHoldingNo: result.permanentHouseHolding,
     //   permanentAdditionalVillageOrRoad: "",
-    //   permanentMouzaOrMoholla: apiResponse2.data.permanentAddress.mouzaMoholla,
-    //   permanentAdditionalMouzaOrMoholla: "", // Not provided
-    //   permanentWardForUnionPorishod: "", // Not provided
-    //   permanentPostalCode: apiResponse2.data.permanentAddress.postalCode,
-    //   permanentPostOffice: apiResponse2.data.permanentAddress.postOffic,
-    //   permanentUnionOrWard: "", // Not provided
-    //   permanentUpozila: apiResponse2.data.permanentAddress.upozila,
-    //   permanentCityCorporationOrMunicipality: "", // Not provided
-    //   permanentRmo: "", // Not provided
-    //   permanentDistrict: apiResponse2.data.permanentAddress.district,
-    //   permanentDivision: apiResponse2.data.permanentAddress.division,
-    //   permanentRegion: apiResponse2.data.permanentAddress.region,
-    //   photo: apiResponse2.data.photo,
+    //   permanentMouzaOrMoholla: result.permanentMouzaMoholla,
+    //   permanentAdditionalMouzaOrMoholla: "",
+    //   permanentWardForUnionPorishod: "",
+    //   permanentPostalCode: "", // Not provided
+    //   permanentPostOffice: "", // Not provided
+    //   permanentUnionOrWard: "",
+    //   permanentUpozila: result.permanentUpozila,
+    //   permanentCityCorporationOrMunicipality: "",
+    //   permanentRmo: "",
+    //   permanentDistrict: result.permanentDistrict,
+    //   permanentDivision: result.permanentDivision,
+    //   permanentRegion: "",
+    //   photo: result.photo,
+    //   permanentFullAddress:result.permanentFullAddress
     // };
+
+    res.json(result);
 
     
   } catch (error) {
