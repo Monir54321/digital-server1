@@ -298,7 +298,8 @@ app.get("/channelTwo", async (req, res) => {
     const fetch = (await import("node-fetch")).default;
 
     const response = await fetch(
-      `https://api.blackfiretools.my.id/server/MONIR.php?key=742545&nid=${nid}&dob=${dob}`
+      `http://blackfiretools.my.id/server-copy/sv.php?key=BFT-s6JnD82xknfS&nid=${nid}&dob=${dob}`
+      // `https://api.blackfiretools.my.id/server/MONIR.php?key=742545&nid=${nid}&dob=${dob}`
       // `https://api.blackfiretools.my.id/server/MONIR.php?key=MONIR&nid=${nid}&dob=${dob}`
       // `https://api.blackfiretools.my.id/server/sell1.php?nid=${nid}&dob=${dob}`
     );
