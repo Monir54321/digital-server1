@@ -156,6 +156,7 @@ app.post("/upload-pdf", upload.single("pdf_file"), async (req, res) => {
 
 app.get("/api/nid", async (req, res) => {
   const { nid, dob } = req.query;
+  console.log("this is working")
   try {
     const fetch = (await import("node-fetch")).default;
 
