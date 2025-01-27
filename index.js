@@ -131,10 +131,9 @@ app.post("/upload-pdf", upload.single("pdf_file"), async (req, res) => {
 
     // Make the request to the external API
     const response = await axios.post(
+      // "https://shawon33.pythonanywhere.com/api/parse-pdf/",
       "https://eservicecenter.xyz/ext/smartseba24?type=C",
-      // "https://photocopyshop.site/ext/smartseba24?type=C",
-      // "https://www.esservice-new.my.id/ext/smartseba24?type=C",
-      // "https://api24.pythonanywhere.com/ext/monir",
+      
       formData,
       {
         headers: {
@@ -145,7 +144,6 @@ app.post("/upload-pdf", upload.single("pdf_file"), async (req, res) => {
 
     // Cleanup the uploaded file from the server
     fs.unlinkSync(file.path);
-
     // Send the response from the external API back to the client
     res.json(response.data);
   } catch (error) {
@@ -156,7 +154,7 @@ app.post("/upload-pdf", upload.single("pdf_file"), async (req, res) => {
 
 app.get("/api/nid", async (req, res) => {
   const { nid, dob } = req.query;
-  console.log("this is working")
+  console.log("this is working");
   try {
     const fetch = (await import("node-fetch")).default;
 
@@ -308,7 +306,6 @@ app.get("/channelTwo", async (req, res) => {
 
     const apiResponse2 = await response.json();
 
-
     if (apiResponse2?.code !== 200 || !apiResponse2?.data?.nationalId) {
       return res.json({
         message: "সার্ভারে খুঁজে পাওয়া যায়নি",
@@ -348,7 +345,7 @@ app.get("/channelTwo", async (req, res) => {
     //   nidMother: "", // Not provided
     //   spouseName: result.spouse,
     //   spouseNameEn: result.spouse,
-    
+
     //   // Present Address
     //   presentHomeOrHoldingNo: result.presentHouseHolding,
     //   presentAdditionalVillageOrRoad: "",
@@ -365,7 +362,7 @@ app.get("/channelTwo", async (req, res) => {
     //   presentDivision: result.presentDivision,
     //   presentRegion: "",
     //   presentFullAddress:result.presentFullAddress,
-    
+
     //   // Permanent Address
     //   permanentHomeOrHoldingNo: result.permanentHouseHolding,
     //   permanentAdditionalVillageOrRoad: "",
@@ -386,8 +383,6 @@ app.get("/channelTwo", async (req, res) => {
     // };
 
     res.json(result);
-
-    
   } catch (error) {
     console.log("object error: ", error);
     res.status(500).json({ error: "Failed to fetch data" });
