@@ -20,7 +20,7 @@ const convertToBanglaNumbers = require("./convertToBanglaNumbers")
     return [
       `বাসা/হোল্ডিং: ${homeHolding && homeHolding !== 'NAN' ? homeHolding : '-'}`,
       villageRoad ? `গ্রাম/রাস্তাঃ ${villageRoad}` : 'গ্রাম/রাস্তাঃ -',
-      postOffice ? `ডাকঘরঃ ${postOffice}-${formattedPostalCode}` : `ডাকঘরঃ -`,
+      postOffice ? `ডাকঘরঃ ${postOffice}- ${formattedPostalCode}` : `ডাকঘরঃ -`,
       upozila ? `উপজেলা: ${upozila}` : 'উপজেলা: -',
       district ? `জেলা: ${district}` : 'জেলা: -',
     ].join(', ')
