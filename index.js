@@ -34,6 +34,7 @@ const bodyParser = require("body-parser");
 
 const fs = require("fs");
 const path = require("path");
+const formatAddress = require("./utils/formatAddress");
 
 app.use(cors());
 app.use(express.json());
@@ -107,13 +108,14 @@ app.patch("/return-balance/:email", async (req, res) => {
 });
 
 app.post("/file-upload", uploadPdf.single("file"), async (req, res) => {
+  console.log("hit")
   const fileName = req.file.filename;
   try {
     await CallListOrder.create({ pdf: fileName });
   } catch (error) {}
 });
 
-app.post("/upload-pdf", upload.single("pdf_file"), async (req, res) => {
+app.post("/upload-pdf", upload.single("file"), async (req, res) => {
   const file = req.file;
 
   if (!file) {
@@ -124,7 +126,7 @@ app.post("/upload-pdf", upload.single("pdf_file"), async (req, res) => {
     // Create a new FormData instance and append the file
     const formData = new FormData();
     formData.append(
-      "pdf_file",
+      "file",
       fs.createReadStream(file.path),
       file.originalname
     );
@@ -132,7 +134,7 @@ app.post("/upload-pdf", upload.single("pdf_file"), async (req, res) => {
     // Make the request to the external API
     const response = await axios.post(
       // "https://shawon33.pythonanywhere.com/api/parse-pdf/",
-      "https://eservicecenter.xyz/ext/smartseba24?type=C",
+      "https://parser.smartshebaa.com/api/parse-pdf/",
       
       formData,
       {
@@ -145,7 +147,20 @@ app.post("/upload-pdf", upload.single("pdf_file"), async (req, res) => {
     // Cleanup the uploaded file from the server
     fs.unlinkSync(file.path);
     // Send the response from the external API back to the client
-    res.json(response.data);
+    const images = response?.data?.images
+    if (images.length >= 2) {
+      response?.data?.data?.push({ nidImg: images[0] }) // Push first image as nidImg
+      response?.data?.data?.push({ signatureImg: images[1] }) // Push second image as signatureImg
+    }
+    const address = formatAddress(response?.data?.data)
+    response.data?.data?.push(
+      {
+        location: address,
+      },
+      { present: address },
+      { permanent: address },
+    )
+    res.status(200).send(response.data)
   } catch (error) {
     console.error("Error uploading file:", error.message);
     res.status(500).send("Something went wrong.");
