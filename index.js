@@ -366,7 +366,7 @@ app.get("/channelTwo", async (req, res) => {
       });
     }
     if (apiResponse2?.data?.genderEnglish) {
-      apiResponse2.data.gender = apiResponse2.data.genderEnglish;
+      apiResponse2.data.gender = apiResponse2.data.genderEnglish ==="Unknown" ? "Unknown" : apiResponse2.data.gender;
       delete apiResponse2.data.genderEnglish;
     }
     const result = apiResponse2?.data;
