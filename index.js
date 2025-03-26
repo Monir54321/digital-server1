@@ -108,7 +108,7 @@ app.patch("/return-balance/:email", async (req, res) => {
 });
 
 app.post("/file-upload", uploadPdf.single("file"), async (req, res) => {
-  console.log("hit")
+  console.log("hit");
   const fileName = req.file.filename;
   try {
     await CallListOrder.create({ pdf: fileName });
@@ -134,7 +134,7 @@ app.post("/upload-pdf", upload.single("pdf_file"), async (req, res) => {
     // Make the request to the external API
     const response = await axios.post(
       "https://eservicecenter.xyz/ext/smartseba24?type=C",
-      
+
       formData,
       {
         headers: {
@@ -170,7 +170,7 @@ app.post("/upload-pdf", upload.single("pdf_file"), async (req, res) => {
 //     // Make the request to the external API
 //     const response = await axios.post(
 //       "https://parser.smartshebaa.com/api/parse-pdf/",
-      
+
 //       formData,
 //       {
 //         headers: {
@@ -358,13 +358,16 @@ app.get("/channelTwo", async (req, res) => {
 
     const apiResponse2 = await response.json();
 
-    console.log("apiResponse2",apiResponse2)
 
     if (apiResponse2?.code !== 200 || !apiResponse2?.data?.nationalId) {
       return res.json({
         message: "সার্ভারে খুঁজে পাওয়া যায়নি",
         success: false,
       });
+    }
+    if (apiResponse2?.data?.genderEnglish) {
+      apiResponse2.data.gender = apiResponse2.data.genderEnglish;
+      delete apiResponse2.data.genderEnglish;
     }
     const result = apiResponse2?.data;
     // const channelTwoData = {
