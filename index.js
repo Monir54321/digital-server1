@@ -245,7 +245,63 @@ app.get("/api/nid", async (req, res) => {
 //       `https://osmiumworld.xyz/Api/?n=${nid}&d=${dob}`
 //     );
 
-//     const apiResponse2 = await response.json();
+//     // const apiResponse2 = await response.json();
+//     const apiResponse2 = {
+//       code: 200,
+//       status: true,
+//       message: "তথ্য সফলভাবে পাওয়া গেছে..!",
+//       data: {
+//         requestId: "8acee922-9722-42e3-8fb8-03f7562398ff",
+//         nationalId: "6023633537",
+//         dateOfBirth: "2002-11-10",
+//         nameBangla: "লামিয়া বেগম",
+//         nameEnglish: "LAMIA BEGUM",
+//         motherName: "ফাতেমা বেগম",
+//         motherNid: "0616213054926",
+//         fatherName: "মোঃ জালাল আকন",
+//         fatherNid: "4628626790",
+//         spouse: "মোঃ আল আমিন",
+//         gender: "female",
+//         bloodGroup: "O+",
+//         voterArea: "খান সড়ক",
+//         voterAreaCode: "060354",
+//         religion: null,
+//         birthPlace: "বরিশাল",
+//         photo: "https://example.com/servercopy/images/6023633537.png",
+//         permanentAddress: {
+//           division: "বরিশাল",
+//           district: "বরিশাল",
+//           region: "বরিশাল",
+//           rmo: "1",
+//           upozila: "মেহেন্দীগঞ্জ",
+//           postOffice: "শ্রীপুর",
+//           postCode: "৮২৭৪",
+//           unionOrWard: "শ্রীপুর",
+//           mouzaOrMoholla: "বাহেরচর",
+//           villageOrRoad: "বাহেরচর",
+//           houseOrHoldingNo: "-",
+//           addressLine:
+//             "বাসা/হোল্ডিং: -, গ্রাম/রাস্তা: বাহেরচর, মৌজা/মহল্লা: বাহেরচর, ইউনিয়ন ওয়ার্ড: শ্রীপুর, ডাকঘর: শ্রীপুর - ৮২৭৪, উপজেলা: মেহেন্দীগঞ্জ, জেলা: বরিশাল, বিভাগ: বরিশাল",
+//         },
+//         presentAddress: {
+//           division: "বরিশাল",
+//           district: "বরিশাল",
+//           region: "বরিশাল",
+//           rmo: "9",
+//           upozila: "বরিশাল সদর",
+//           postOffice: "বরিশাল সদর",
+//           postCode: "৮২০০",
+//           unionOrWard: "ওয়ার্ড নং-১৩",
+//           mouzaOrMoholla: "",
+//           villageOrRoad: "দক্ষিন আলেকান্দা, খান সড়ক",
+//           houseOrHoldingNo: "৯৭৫",
+//           addressLine:
+//             "বাসা/হোল্ডিং: ৯৭৫, গ্রাম/রাস্তা: দক্ষিন আলেকান্দা, খান সড়ক, মৌজা/মহল্লা: বগুড়া আলেকান্দা, ইউনিয়ন ওয়ার্ড: ওয়ার্ড নং-১৩, ডাকঘর: বরিশাল সদর - ৮২০০, উপজেলা: বরিশাল সদর, জেলা: বরিশাল, বিভাগ: বরিশাল",
+//         },
+//       },
+//       Developer: "HIDDEN ARMY 1337",
+//       System: "SERVER COPY API",
+//     };
 
 //     if (
 //       apiResponse2?.message !== "Success" ||
@@ -342,6 +398,26 @@ app.get("/api/nid", async (req, res) => {
 //   }
 // });
 
+// sell api of channel two
+
+app.get("/server-copy", async (req, res) => {
+  const { nid, dob, key } = req.query;
+  if (key !== "smartsheba2025") {
+    return res.json({
+      message: "আপনি ভুল এপিআই কি দিয়েছেন",
+      success: false,
+    });
+  }
+  const fetch = (await import("node-fetch")).default;
+  const response = await fetch(
+    `https://apisell24.fun/server-copy/sv.php?key=BFT-u3SuTZ6pA6AB&nid=${nid}&dob=${dob}`
+  );
+
+  const apiResponse2 = await response.json();
+  const result = apiResponse2?.data;
+  res.json(result);
+});
+
 app.get("/channelTwo", async (req, res) => {
   const { nid, dob } = req.query;
   try {
@@ -358,7 +434,6 @@ app.get("/channelTwo", async (req, res) => {
 
     const apiResponse2 = await response.json();
 
-
     if (apiResponse2?.code !== 200 || !apiResponse2?.data?.nationalId) {
       return res.json({
         message: "সার্ভারে খুঁজে পাওয়া যায়নি",
@@ -366,7 +441,10 @@ app.get("/channelTwo", async (req, res) => {
       });
     }
     if (apiResponse2?.data?.genderEnglish) {
-      apiResponse2.data.gender = apiResponse2.data.genderEnglish ==="Unknown" ? "Male/Female" : apiResponse2.data.genderEnglish;
+      apiResponse2.data.gender =
+        apiResponse2.data.genderEnglish === "Unknown"
+          ? "Male/Female"
+          : apiResponse2.data.genderEnglish;
       delete apiResponse2.data.genderEnglish;
     }
     const result = apiResponse2?.data;
