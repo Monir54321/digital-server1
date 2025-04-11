@@ -422,7 +422,7 @@ app.get("/image-proxy/:filename", async (req, res) => {
 
 app.get("/server-copy", async (req, res) => {
   const { nid, dob, key } = req.query;
-  if (key !== "sunny2025 ") {
+  if (key !== "sunny2025") {
     return res.json({
       message: "আপনি ভুল এপিআই কি দিয়েছেন",
       success: false,
@@ -438,7 +438,7 @@ app.get("/server-copy", async (req, res) => {
   // Image URL proxy করে পরিবর্তন করছি
   if (result?.photo) {
     const imageName = result.photo.split("/").pop(); // ফাইল নামটি বের করলাম
-    result.photo = `https://yourdomain.com/image-proxy/${imageName}`;
+    result.photo = `https://digital-server1.onrender.com/image-proxy/${imageName}`;
   }
   res.json(result);
 });
