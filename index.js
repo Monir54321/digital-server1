@@ -440,6 +440,7 @@ app.get("/server-copy", async (req, res) => {
     const imageName = result.photo.split("/").pop(); // ফাইল নামটি বের করলাম
     result.photo = `https://digital-server1.onrender.com/image-proxy/${imageName}`;
   }
+  result.requestId=key
   res.json(result);
 });
 
