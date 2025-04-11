@@ -397,12 +397,32 @@ app.get("/api/nid", async (req, res) => {
 //     res.status(500).json({ error: "Failed to fetch data" });
 //   }
 // });
+app.get("/image-proxy/:filename", async (req, res) => {
+  const fetch = (await import("node-fetch")).default;
+  const { filename } = req.params;
+
+  try {
+    const response = await fetch(`https://apisell24.fun/images/${filename}`);
+    const contentType = response.headers.get("content-type");
+
+    if (!response.ok) {
+      return res.status(404).json({ message: "Image not found" });
+    }
+
+    res.setHeader("Content-Type", contentType);
+    const buffer = await response.buffer();
+    res.send(buffer);
+  } catch (error) {
+    res.status(500).json({ message: "Image fetch failed", error: error.message });
+  }
+});
+
 
 // sell api of channel two
 
 app.get("/server-copy", async (req, res) => {
   const { nid, dob, key } = req.query;
-  if (key !== "smartsheba2025") {
+  if (key !== "sunny2025 ") {
     return res.json({
       message: "আপনি ভুল এপিআই কি দিয়েছেন",
       success: false,
@@ -415,6 +435,11 @@ app.get("/server-copy", async (req, res) => {
 
   const apiResponse2 = await response.json();
   const result = apiResponse2?.data;
+  // Image URL proxy করে পরিবর্তন করছি
+  if (result?.photo) {
+    const imageName = result.photo.split("/").pop(); // ফাইল নামটি বের করলাম
+    result.photo = `https://yourdomain.com/image-proxy/${imageName}`;
+  }
   res.json(result);
 });
 
