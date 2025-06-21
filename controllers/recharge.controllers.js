@@ -16,6 +16,7 @@ const { default: mongoose } = require("mongoose");
 exports.createNewRechargeControllers = async (req, res) => {
   try {
     const data = req.body;
+    console.log("bkash data", data);
     globals.setValue("email", data?.email, { protected: true });
     const result = await createNewRechargeService(data);
 
@@ -27,7 +28,7 @@ exports.createNewRechargeControllers = async (req, res) => {
   } catch (error) {
     res.status(401).send({
       status: "Failed",
-      message: "Failed to send your request",
+      message: "Fail to submit bkash payment",
       data: error?.message,
     });
   }

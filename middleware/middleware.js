@@ -16,8 +16,8 @@ const bkashAuth = async (req, res, next) => {
         headers: {
           "Content-Type": "application/json",
           Accept: "application/json",
-          username: process.env.bkash_username,
-          password: process.env.bkash_password,
+          username: "01942588940",
+          password: "5f5<tjBEagb",
         },
       }
     );

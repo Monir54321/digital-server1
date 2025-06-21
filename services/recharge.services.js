@@ -24,6 +24,7 @@ exports.createNewRechargeService = async (payload) => {
     // console.log("payment created", data);// show the response when the payment is created
     return data?.bkashURL;
   } catch (error) {
+    console.log("bkash payment error", error);
     throw new Error(error?.message);
   }
 };
