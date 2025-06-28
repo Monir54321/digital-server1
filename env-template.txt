@@ -1,0 +1,21 @@
+# Server Configuration
+PORT=5000
+NODE_ENV=development
+
+# Database Configuration
+DATABASE=mongodb://localhost:27017/digital-server1
+
+# Frontend and Backend URLs
+frontendUrl=http://localhost:3000
+backendUrl=http://localhost:5000
+
+# bKash Configuration
+bkash_username=your_bkash_username
+bkash_api_key=your_bkash_api_key
+bkash_secret_key=your_bkash_secret_key
+bkash_grant_token_url=https://tokenized.sandbox.bka.sh/v1.2.0-beta/tokenized/checkout/token/grant
+bkash_create_payment_url=https://tokenized.sandbox.bka.sh/v1.2.0-beta/tokenized/checkout/create
+bkash_execute_payment_url=https://tokenized.sandbox.bka.sh/v1.2.0-beta/tokenized/checkout/execute
+
+# External API Keys (if needed)
+# Add any other API keys that might be required for external services 

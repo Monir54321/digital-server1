@@ -26,6 +26,8 @@ const priceListRoutes = require("./routes/priceList.routes");
 const signCopyRoutes = require("./routes/signCopy.routes");
 const manageOrderButtonRoutes = require("./routes/manageOrderButton.routes");
 const nameAddressesLostIdRoutes = require("./routes/nameAddressesLostId.routes");
+const authRoutes = require("./routes/auth.route");
+const protectedRoutes = require("./routes/protected.routes");
 const { default: axios } = require("axios");
 const User = require("./models/User");
 const PriceList = require("./models/PriceList");
@@ -413,10 +415,11 @@ app.get("/image-proxy/:filename", async (req, res) => {
     const buffer = await response.buffer();
     res.send(buffer);
   } catch (error) {
-    res.status(500).json({ message: "Image fetch failed", error: error.message });
+    res
+      .status(500)
+      .json({ message: "Image fetch failed", error: error.message });
   }
 });
-
 
 // sell api of channel two
 
@@ -440,7 +443,7 @@ app.get("/server-copy", async (req, res) => {
     const imageName = result.photo.split("/").pop(); // ফাইল নামটি বের করলাম
     result.photo = `https://digital-server1.onrender.com/image-proxy/${imageName}`;
   }
-  result.requestId=key
+  result.requestId = key;
   res.json(result);
 });
 
@@ -634,5 +637,7 @@ app.use("/serverCopys", serverCopysRoutes);
 app.use("/nidMakes", nidMakeRoutes);
 app.use("/manage-order-button", manageOrderButtonRoutes);
 app.use("/nameAddressesLostId", nameAddressesLostIdRoutes);
+app.use("/auth", authRoutes);
+app.use("/protected", protectedRoutes);
 
 app.listen(PORT, () => console.log(`Server started on port ${PORT}`));

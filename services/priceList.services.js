@@ -8,11 +8,12 @@ exports.createNewPriceListService = async (data) => {
 
 exports.getPriceListService = async () => {
   const result = await PriceList.find({});
-
+  console.log(result);
   return result;
 };
+
 exports.getAPriceListService = async (_id) => {
-  const result = await PriceList.findOne({ _id });
+  const result = await PriceList.findById(_id);
 
   return result;
 };
