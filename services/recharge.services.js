@@ -6,8 +6,12 @@ const bkash_headers = require("../utils/bkashHeaders");
 
 exports.createNewRechargeService = async (payload) => {
   try {
+    const createPaymentUrl =
+      process.env.bkash_create_payment_url ||
+      "https://tokenized.pay.bka.sh/v1.2.0-beta/tokenized/checkout/create";
+
     const { data } = await axios.post(
-      process.env.bkash_create_payment_url,
+      createPaymentUrl,
       {
         mode: "0011", //it means it works checkout(url based)
         payerReference: " ",
@@ -21,7 +25,7 @@ exports.createNewRechargeService = async (payload) => {
         headers: await bkash_headers(),
       }
     );
-    // console.log("payment created", data);// show the response when the payment is created
+    console.log("payment created", data); // show the response when the payment is created
     return data?.bkashURL;
   } catch (error) {
     console.log("bkash payment error", error);

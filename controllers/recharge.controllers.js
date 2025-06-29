@@ -38,7 +38,9 @@ exports.callback = async (req, res) => {
   const { paymentID, status } = req.query;
   console.log("global email value", globals.getValue("email"));
   if (status === "cancel" || status === "failure") {
-    return res.redirect(`${process.env.frontendUrl}/error?message=${status}`);
+    return res.redirect(
+      `https://smartshebav2.vercel.app/dashboard?status=${status}`
+    );
   }
 
   const session = await mongoose.startSession();
@@ -46,8 +48,12 @@ exports.callback = async (req, res) => {
 
   if (status === "success") {
     try {
+      const executePaymentUrl =
+        process.env.bkash_execute_payment_url ||
+        "https://tokenized.pay.bka.sh/v1.2.0-beta/tokenized/checkout/execute";
+
       const { data } = await axios.post(
-        process.env.bkash_execute_payment_url,
+        executePaymentUrl,
         { paymentID },
         {
           headers: await bkash_headers(),
@@ -76,22 +82,24 @@ exports.callback = async (req, res) => {
         globals.unsetValue("email");
         await session.commitTransaction();
         await session.endSession();
-        return res.redirect(`${process.env.frontendUrl}/success`);
+        return res.redirect(
+          `https://smartshebav2.vercel.app/dashboard?status=success&amount=${data?.amount}`
+        );
       } else {
         globals.unsetValue("email");
         await session.abortTransaction();
         await session.endSession();
         return res.redirect(
-          `${process.env.frontendUrl}/error?message=${data.statusMessage}`
+          `https://smartshebav2.vercel.app/dashboard?status=error&message=${data.statusMessage}`
         );
       }
     } catch (error) {
+      console.error("Callback error:", error);
       globals.unsetValue("email");
       await session.abortTransaction();
       await session.endSession();
-      console.log(error);
       return res.redirect(
-        `${process.env.frontendUrl}/error?message=${error.message}`
+        `https://smartshebav2.vercel.app/dashboard?status=error&message=Payment verification failed`
       );
     }
   }

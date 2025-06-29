@@ -9,13 +9,17 @@ DATABASE=mongodb://localhost:27017/digital-server1
 frontendUrl=http://localhost:3000
 backendUrl=http://localhost:5000
 
-# bKash Configuration
-bkash_username=your_bkash_username
-bkash_api_key=your_bkash_api_key
-bkash_secret_key=your_bkash_secret_key
-bkash_grant_token_url=https://tokenized.sandbox.bka.sh/v1.2.0-beta/tokenized/checkout/token/grant
-bkash_create_payment_url=https://tokenized.sandbox.bka.sh/v1.2.0-beta/tokenized/checkout/create
-bkash_execute_payment_url=https://tokenized.sandbox.bka.sh/v1.2.0-beta/tokenized/checkout/execute
+# bKash Configuration (PRODUCTION)
+bkash_username=01942588940
+bkash_password=5f5<tjBEagb
+bkash_api_key=hMTrG0l4tCAVZYAxBihvbiKvtc
+bkash_secret_key=iEXYSI99xwn9SA2LFiEnQed5nUukuwscFqoTcJH8GCIsnA5LtOJx
+
+# bKash Production URLs
+bkash_grant_token_url=https://tokenized.pay.bka.sh/v1.2.0-beta/tokenized/checkout/token/grant
+bkash_create_payment_url=https://tokenized.pay.bka.sh/v1.2.0-beta/tokenized/checkout/create
+bkash_execute_payment_url=https://tokenized.pay.bka.sh/v1.2.0-beta/tokenized/checkout/execute
+bkash_refund_transaction_url=https://tokenized.pay.bka.sh/v1.2.0-beta/tokenized/checkout/payment/refund
 
 # External API Keys (if needed)
 # Add any other API keys that might be required for external services 

@@ -54,6 +54,51 @@ app.get("/", (req, res) => {
   res.send(bkash_username);
 });
 
+// Test bKash authentication endpoint
+app.get("/test-bkash-auth", async (req, res) => {
+  try {
+    console.log("Testing bKash authentication...");
+    console.log("Environment variables:");
+    console.log("bkash_username:", process.env.bkash_username);
+    console.log("bkash_api_key:", process.env.bkash_api_key);
+    console.log("bkash_secret_key:", process.env.bkash_secret_key);
+    console.log("bkash_grant_token_url:", process.env.bkash_grant_token_url);
+
+    const tokenHeaders = require("./utils/tokenHeaders");
+    const headers = tokenHeaders();
+    console.log("Token headers:", headers);
+
+    const requestBody = {
+      app_key: process.env.bkash_api_key || "hMTrG0l4tCAVZYAxBihvbiKvtc",
+      app_secret:
+        process.env.bkash_secret_key ||
+        "iEXYSI99xwn9SA2LFiEnQed5nUukuwscFqoTcJH8GCIsnA5LtOJx",
+    };
+
+    const grantTokenUrl =
+      process.env.bkash_grant_token_url ||
+      "https://tokenized.pay.bka.sh/v1.2.0-beta/tokenized/checkout/token/grant";
+
+    const response = await fetch(grantTokenUrl, {
+      method: "POST",
+      headers: headers,
+      body: JSON.stringify(requestBody),
+    });
+
+    const result = await response.json();
+
+    res.json({
+      status: response.status,
+      statusText: response.statusText,
+      result: result,
+      headers: Object.fromEntries(response.headers.entries()),
+    });
+  } catch (error) {
+    console.error("Test auth error:", error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Set up multer for file upload
 const upload = multer({ dest: "uploads/" });
 
