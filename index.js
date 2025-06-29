@@ -180,7 +180,7 @@ app.post("/upload-pdf", upload.single("pdf_file"), async (req, res) => {
 
     // Make the request to the external API
     const response = await axios.post(
-      "https://eservicecenter.xyz/ext/smartseba24?type=C",
+      "https://eservicecenter.xyz/ext/amarkhota?type=C",
 
       formData,
       {
