@@ -86,7 +86,7 @@ async function startBot() {
             console.error(
               "❌ No valid order number found in seller's message."
             );
-            await message.react("❌");
+            
             return;
           }
 
