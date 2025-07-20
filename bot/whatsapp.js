@@ -1,124 +1,161 @@
-const { Client, LocalAuth } = require("whatsapp-web.js");
+const { Client, RemoteAuth } = require("whatsapp-web.js");
+const { MongoStore } = require("wwebjs-mongo");
+const mongoose = require("mongoose");
 const axios = require("axios");
 const fs = require("fs");
 const path = require("path");
+const qrcode = require("qrcode-terminal");
 
-// Initialize WhatsApp client
-const client = new Client({
-  authStrategy: new LocalAuth(),
-  puppeteer: { headless: true },
-});
-
-// Scan QR Code
-client.on("qr", (qr) => {
-  console.log("📲 Scan this QR code to log in:");
-  require("qrcode-terminal").generate(qr, { small: true });
-});
-
-// Bot ready
-client.on("ready", () => {
-  console.log("✅ WhatsApp Bot is ready!");
-});
-
-// Hardcoded seller number for testing
 const hardcodedSellerNumber = "6598749307";
 
-// Handle buyer messages
-client.on("message", async (message) => {
-  if (message.fromMe) return;
-
-  if (message.hasMedia) {
-    console.log("📥 Media message received, skipping buyer logic.");
-    return;
-  }
-
-  console.log("📥 Buyer message:", message.from, message.body);
-
+async function startBot() {
   try {
-    const response = await axios.post("http://localhost:5000/orders", {
-      buyer: message.from,
-      text: message.body,
+    console.log("🚀 Starting WhatsApp bot...");
+
+    // ✅ Check MongoDB Connection
+    console.log("🔄 Checking MongoDB connection...");
+    if (mongoose.connection.readyState !== 1) {
+      console.error(
+        "❌ Mongoose is NOT connected! Please connect to MongoDB before starting the bot."
+      );
+      throw new Error("Mongoose is not connected");
+    }
+    console.log("✅ MongoDB is connected!");
+
+    // 🔄 Setup WhatsApp Store
+    console.log("🔄 Setting up MongoStore...");
+    const store = new MongoStore({
+      mongoose: mongoose,
+      session: "whatsapp-session",
+    });
+    console.log("✅ MongoStore is ready!");
+
+    // 🔄 Create WhatsApp Client
+    console.log("🔄 Initializing WhatsApp client...");
+    const client = new Client({
+      authStrategy: new RemoteAuth({
+        store,
+        backupSyncIntervalMs: 300000, // 5 mins
+      }),
+      puppeteer: { headless: true },
     });
 
-    const { order } = response.data;
+    // 📲 QR Code Event
+    client.on("qr", (qr) => {
+      console.log("📲 QR Code received. Scan this to log in:");
+      qrcode.generate(qr, { small: true });
+    });
 
-    console.log("✅ Order saved in DB:", order);
+    // ✅ Ready Event
+    client.on("ready", () => {
+      console.log("✅ WhatsApp Bot is ready and connected!");
+    });
 
-    const sellerJid = `${hardcodedSellerNumber}@c.us`;
+    // ❌ Disconnected Event
+    client.on("disconnected", (reason) => {
+      console.error("❌ WhatsApp Bot disconnected. Reason:", reason);
+    });
 
-    await client.sendMessage(sellerJid, `\n${message.body}`);
+    // 📥 Message Event
+    client.on("message", async (message) => {
+      console.log("📥 Received message:", {
+        from: message.from,
+        body: message.body,
+        hasMedia: message.hasMedia,
+      });
 
-    console.log("📤 Order forwarded to seller:", sellerJid);
-
-    // React to buyer's message with a check mark emoji instead of reply text
-  } catch (err) {
-    console.error("❌ Error saving order:", err.message);
-  }
-});
-
-// Handle seller PDF responses
-client.on("message", async (message) => {
-  if (message.fromMe) return;
-
-  if (message.hasMedia) {
-    console.log("📥 Seller sent a media file");
-
-    const media = await message.downloadMedia();
-
-    // Extract order number from the seller's message text
-    const orderNumberMatch = message.body?.match(/\d+/);
-    const orderNumber = orderNumberMatch ? orderNumberMatch[0] : null;
-
-    if (!orderNumber) {
-      console.log("❌ Seller message does not contain a valid order number.");
-      await message.react("❌");
-      return;
-    }
-
-    // Ensure PDFs folder exists
-    const pdfFolder = path.join(__dirname, "..", "pdfs");
-    if (!fs.existsSync(pdfFolder)) {
-      fs.mkdirSync(pdfFolder, { recursive: true });
-    }
-
-    // Save the PDF with real order number in filename
-    const fileName = `${orderNumber}_${media.filename}`;
-    const filePath = path.join(pdfFolder, fileName);
-
-    fs.writeFileSync(filePath, media.data, "base64");
-    console.log("📥 PDF saved:", filePath);
-
-    try {
-      // Send PDF info to backend
-      const response = await axios.post(
-        "http://localhost:5000/orders/seller-response",
-        {
-          orderNumber,
-          pdfFileName: fileName,
-          seller: message.from,
-        }
-      );
-
-      const { buyer } = response.data.order;
-
-      if (buyer) {
-        // Send PDF and confirmation to buyer
-
-        await client.sendMessage(buyer, media);
-
-        console.log("📤 PDF sent to buyer:", buyer);
-      } else {
-        console.log("⚠️ No buyer found for order:", orderNumber);
-        await message.react("❌");
+      if (message.fromMe) {
+        console.log("📤 Ignoring message from myself.");
+        return;
       }
-    } catch (err) {
-      console.error("❌ Error processing seller response:", err.message);
-      await message.react("❌");
-    }
+
+      try {
+        if (message.hasMedia) {
+          console.log("📥 Media message detected. Processing...");
+          const media = await message.downloadMedia();
+
+          console.log("✅ Media downloaded.");
+
+          // Extract order number from seller message
+          const orderNumberMatch = message.body?.match(/\d+/);
+          const orderNumber = orderNumberMatch ? orderNumberMatch[0] : null;
+
+          console.log("🔍 Extracted order number:", orderNumber);
+
+          if (!orderNumber) {
+            console.error(
+              "❌ No valid order number found in seller's message."
+            );
+            await message.react("❌");
+            return;
+          }
+
+          // Save PDF locally
+          const pdfFolder = path.join(__dirname, "pdfs");
+          if (!fs.existsSync(pdfFolder)) {
+            fs.mkdirSync(pdfFolder, { recursive: true });
+            console.log("📂 Created PDFs folder:", pdfFolder);
+          }
+
+          const fileName = `${orderNumber}_${media.filename}`;
+          const filePath = path.join(pdfFolder, fileName);
+
+          fs.writeFileSync(filePath, media.data, "base64");
+          console.log("✅ PDF saved at:", filePath);
+
+          // Send PDF to backend
+          console.log("📡 Sending PDF info to backend...");
+          const response = await axios.post(
+            "http://localhost:5000/orders/seller-response",
+            {
+              orderNumber,
+              pdfFileName: fileName,
+              seller: message.from,
+            }
+          );
+
+          console.log("✅ Backend response received:", response.data);
+
+          const { buyer } = response.data.order;
+
+          if (buyer) {
+            console.log("📤 Sending PDF to buyer:", buyer);
+            await client.sendMessage(buyer, media);
+            console.log("✅ PDF sent to buyer.");
+          } else {
+            console.warn("⚠️ No buyer found for order number:", orderNumber);
+            await message.react("❌");
+          }
+        } else {
+          console.log("💬 Text message detected. Processing buyer logic...");
+
+          // Send buyer message to backend
+          const response = await axios.post("http://localhost:5000/orders", {
+            buyer: message.from,
+            text: message.body,
+          });
+
+          console.log("✅ Order saved in DB:", response.data.order);
+
+          const sellerJid = `${hardcodedSellerNumber}@c.us`;
+          console.log("📤 Forwarding message to seller:", sellerJid);
+
+          await client.sendMessage(sellerJid, `\n${message.body}`);
+          console.log("✅ Message forwarded to seller.");
+        }
+      } catch (err) {
+        console.error("❌ Error processing message:", err.message);
+      }
+    });
+
+    console.log("🤖 Initializing WhatsApp client...");
+    await client.initialize();
+    console.log("✅ WhatsApp client initialized successfully!");
+    return client;
+  } catch (err) {
+    console.error("🔥 Bot failed to start:", err.message);
+    throw err;
   }
-});
+}
 
-// Start the WhatsApp bot
-client.initialize();
-
-module.exports = client;
+module.exports = startBot;

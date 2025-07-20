@@ -53,9 +53,26 @@ app.use(bodyParser.urlencoded({ limit: "50mb", extended: true }));
 app.use("/files", express.static("files"));
 
 // Connecting to the database
-mongoose.connect(process.env.DATABASE).then(() => {
-  console.log("Database connected successfully!".bgBlue.bold);
-});
+
+const startBot = require("./bot/whatsapp");
+
+// ✅ Connect mongoose here
+mongoose
+  .connect(process.env.DATABASE, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+  })
+  .then(() => {
+    console.log("✅ MongoDB connected!");
+    return startBot();
+  })
+  .then(() => {
+    console.log("🚀 WhatsApp bot started successfully!");
+  })
+  .catch((err) => {
+    console.error("❌ Error:", err);
+  });
+
 
 app.get("/", (req, res) => {
   const bkash_username = process.env.bkash_username;
