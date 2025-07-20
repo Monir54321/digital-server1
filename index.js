@@ -28,15 +28,23 @@ const manageOrderButtonRoutes = require("./routes/manageOrderButton.routes");
 const nameAddressesLostIdRoutes = require("./routes/nameAddressesLostId.routes");
 const authRoutes = require("./routes/auth.route");
 const protectedRoutes = require("./routes/protected.routes");
+const whatsAppOrderRoutes = require("./routes/whatsappOrder.routes");
+const sellerRoutes = require("./routes/seller.routes");
+const router = require("./routes/order.routes");
+const whatsAppWebhookRoutes = require("./routes/whatsappWebhook.routes");
+const dashboardRoutes = require("./routes/dashboard.routes");
+const automationRoutes = require("./routes/automation.routes");
+const orderRoutes = require("./routes/order.routes");
 const { default: axios } = require("axios");
 const User = require("./models/User");
 const PriceList = require("./models/PriceList");
 const CallListOrder = require("./models/CallListOrder");
 const bodyParser = require("body-parser");
-
+require("./bot/whatsapp");
 const fs = require("fs");
 const path = require("path");
 const formatAddress = require("./utils/formatAddress");
+
 
 app.use(cors());
 app.use(express.json());
@@ -684,5 +692,11 @@ app.use("/manage-order-button", manageOrderButtonRoutes);
 app.use("/nameAddressesLostId", nameAddressesLostIdRoutes);
 app.use("/auth", authRoutes);
 app.use("/protected", protectedRoutes);
+app.use("/whatsapp-orders", whatsAppOrderRoutes);
+app.use("/sellers", sellerRoutes);
+app.use("/whatsapp-webhook", whatsAppWebhookRoutes);
+app.use("/dashboard", dashboardRoutes);
+app.use("/automation", automationRoutes);
+app.use("/orders", orderRoutes);
 
 app.listen(PORT, () => console.log(`Server started on port ${PORT}`));
