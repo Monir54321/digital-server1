@@ -6,7 +6,7 @@ const fs = require("fs");
 const path = require("path");
 const qrcode = require("qrcode-terminal");
 
-const hardcodedSellerNumber = "6598749307";
+const hardcodedSellerNumber = "8801884562356";
 
 async function startBot() {
   try {
@@ -32,13 +32,27 @@ async function startBot() {
 
     // 🔄 Create WhatsApp Client
     console.log("🔄 Initializing WhatsApp client...");
-    const client = new Client({
-      authStrategy: new RemoteAuth({
-        store,
-        backupSyncIntervalMs: 300000, // 5 mins
-      }),
-      puppeteer: { headless: true },
-    });
+const client = new Client({
+  authStrategy: new RemoteAuth({
+    store,
+    backupSyncIntervalMs: 300000, // 5 minutes
+  }),
+  puppeteer: {
+    headless: false, // false to debug
+    executablePath: require("puppeteer").executablePath(),
+    ignoreDefaultArgs: ["--disable-extensions"], // ✅ allow custom args
+    args: [
+      "--no-sandbox",
+      "--disable-setuid-sandbox",
+      "--disable-blink-features=AutomationControlled",
+      "--disable-infobars",
+    ],
+  },
+});
+
+
+
+
 
     // 📲 QR Code Event
     client.on("qr", (qr) => {
@@ -86,7 +100,7 @@ async function startBot() {
             console.error(
               "❌ No valid order number found in seller's message."
             );
-            
+            await message.react("❌");
             return;
           }
 
@@ -106,7 +120,7 @@ async function startBot() {
           // Send PDF to backend
           console.log("📡 Sending PDF info to backend...");
           const response = await axios.post(
-            "http://localhost:5000/orders/seller-response",
+            "https://digital-server1.onrender.com/orders/seller-response",
             {
               orderNumber,
               pdfFileName: fileName,
@@ -130,10 +144,13 @@ async function startBot() {
           console.log("💬 Text message detected. Processing buyer logic...");
 
           // Send buyer message to backend
-          const response = await axios.post("http://localhost:5000/orders", {
-            buyer: message.from,
-            text: message.body,
-          });
+          const response = await axios.post(
+            "https://digital-server1.onrender.com/orders",
+            {
+              buyer: message.from,
+              text: message.body,
+            }
+          );
 
           console.log("✅ Order saved in DB:", response.data.order);
 
