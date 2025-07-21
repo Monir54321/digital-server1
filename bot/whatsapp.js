@@ -35,20 +35,22 @@ async function startBot() {
 const client = new Client({
   authStrategy: new RemoteAuth({
     store,
-    backupSyncIntervalMs: 300000, // 5 minutes
+    backupSyncIntervalMs: 300000,
   }),
   puppeteer: {
-    headless: false, // false to debug
+    headless: true, // ✅ true on VPS
     executablePath: require("puppeteer").executablePath(),
-    ignoreDefaultArgs: ["--disable-extensions"], // ✅ allow custom args
     args: [
       "--no-sandbox",
       "--disable-setuid-sandbox",
+      "--disable-dev-shm-usage",
+      "--disable-gpu",
       "--disable-blink-features=AutomationControlled",
       "--disable-infobars",
     ],
   },
 });
+
 
 
 
