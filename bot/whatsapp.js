@@ -37,18 +37,7 @@ const client = new Client({
     store,
     backupSyncIntervalMs: 300000,
   }),
-  puppeteer: {
-    headless: true, // ✅ true on VPS
-    executablePath: require("puppeteer").executablePath(),
-    args: [
-      "--no-sandbox",
-      "--disable-setuid-sandbox",
-      "--disable-dev-shm-usage",
-      "--disable-gpu",
-      "--disable-blink-features=AutomationControlled",
-      "--disable-infobars",
-    ],
-  },
+  
 });
 
 
