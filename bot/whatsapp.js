@@ -5,8 +5,18 @@ const axios = require("axios");
 const fs = require("fs");
 const path = require("path");
 const qrcode = require("qrcode-terminal");
+const Order = require("../models/order.model");
 
 const hardcodedSellerNumber = "8801958052026";
+
+const getBuyerByOrderNumber = async (orderNumber) => {
+  const order = await Order.findOne({ orderNumber });
+  if (!order) {
+    console.log("❌ No order found for number:", orderNumber);
+    throw new Error("Order not found");
+  }
+  return order.buyer;
+};
 
 async function startBot() {
   try {
@@ -28,17 +38,16 @@ async function startBot() {
       mongoose: mongoose,
       session: "whatsapp-session",
     });
-    console.log("✅ MongoStore is ready!");
+    
 
-    // 🔄 Create WhatsApp Client
-    console.log("🔄 Initializing WhatsApp client...");
+  
     const client = new Client({
       authStrategy: new RemoteAuth({
         store,
         backupSyncIntervalMs: 300000,
       }),
       puppeteer: {
-        executablePath: "/usr/bin/chromium", // or chromium, whichever path works
+        executablePath: "/usr/bin/chromium", 
         headless: true,
         args: [
           "--no-sandbox",
@@ -69,55 +78,63 @@ async function startBot() {
 
     // 📥 Message Event
     client.on("message", async (message) => {
-      console.log("📥 Received message:", {
-        from: message.from,
-        body: message.body,
-        hasMedia: message.hasMedia,
-      });
+      if (message.fromMe) return; // Ignore bot’s own messages
 
-      if (message.fromMe) {
-        console.log("📤 Ignoring message from myself.");
-        return;
+      const sellerJid = `${hardcodedSellerNumber}@c.us`;
+      const isFromSeller = message.from === sellerJid;
+
+      // 🟢 Case 1: Buyer sending a message
+      if (!isFromSeller) {
+        if (message.hasMedia) {
+          return; // Don’t forward buyer media
+        }
+
+        try {
+          // Save order to backend
+          const response = await axios.post("http://localhost:3000/orders", {
+            buyer: message.from,
+            text: message.body,
+          });
+
+          const { order } = response.data;
+
+          // ✅ Forward text to seller only once
+          await client.sendMessage(sellerJid, `\n${message.body}`);
+        } catch (err) {
+          console.error("❌ Error saving order:", err.message);
+        }
       }
 
-      try {
-        if (message.hasMedia) {
-          console.log("📥 Media message detected. Processing...");
-          const media = await message.downloadMedia();
+      // 🟢 Case 2: Seller sending PDF/media
+      else {
+        if (!message.hasMedia) {
+          return; // Don’t process seller text
+        }
 
-          console.log("✅ Media downloaded.");
+        const media = await message.downloadMedia();
 
-          // Extract order number from seller message
-          const orderNumberMatch = message.body?.match(/\d+/);
-          const orderNumber = orderNumberMatch ? orderNumberMatch[0] : null;
+        // Extract order number
+        const orderNumberMatch = message.body?.match(/\d+/);
+        const orderNumber = orderNumberMatch ? orderNumberMatch[0] : null;
 
-          console.log("🔍 Extracted order number:", orderNumber);
+        if (!orderNumber) {
+          return;
+        }
 
-          if (!orderNumber) {
-            console.error(
-              "❌ No valid order number found in seller's message."
-            );
-            await message.react("❌");
-            return;
-          }
+        // Save PDF
+        const pdfFolder = path.join(__dirname, "..", "pdfs");
+        if (!fs.existsSync(pdfFolder)) {
+          fs.mkdirSync(pdfFolder, { recursive: true });
+        }
 
-          // Save PDF locally
-          const pdfFolder = path.join(__dirname, "pdfs");
-          if (!fs.existsSync(pdfFolder)) {
-            fs.mkdirSync(pdfFolder, { recursive: true });
-            console.log("📂 Created PDFs folder:", pdfFolder);
-          }
+        const fileName = `${orderNumber}_${media.filename}`;
+        const filePath = path.join(pdfFolder, fileName);
+        fs.writeFileSync(filePath, media.data, "base64");
 
-          const fileName = `${orderNumber}_${media.filename}`;
-          const filePath = path.join(pdfFolder, fileName);
-
-          fs.writeFileSync(filePath, media.data, "base64");
-          console.log("✅ PDF saved at:", filePath);
-
-          // Send PDF to backend
-          console.log("📡 Sending PDF info to backend...");
+        try {
+          // Notify backend
           const response = await axios.post(
-            "https://digital-server1.onrender.com/orders/seller-response",
+            "http://localhost:3000/orders/seller-response",
             {
               orderNumber,
               pdfFileName: fileName,
@@ -125,40 +142,16 @@ async function startBot() {
             }
           );
 
-          console.log("✅ Backend response received:", response.data);
-
           const { buyer } = response.data.order;
 
           if (buyer) {
-            console.log("📤 Sending PDF to buyer:", buyer);
+            // Forward PDF to buyer
             await client.sendMessage(buyer, media);
-            console.log("✅ PDF sent to buyer.");
           } else {
-            console.warn("⚠️ No buyer found for order number:", orderNumber);
-            await message.react("❌");
           }
-        } else {
-          console.log("💬 Text message detected. Processing buyer logic...");
-
-          // Send buyer message to backend
-          const response = await axios.post(
-            "https://digital-server1.onrender.com/orders",
-            {
-              buyer: message.from,
-              text: message.body,
-            }
-          );
-
-          console.log("✅ Order saved in DB:", response.data.order);
-
-          const sellerJid = `${hardcodedSellerNumber}@c.us`;
-          console.log("📤 Forwarding message to seller:", sellerJid);
-
-          await client.sendMessage(sellerJid, `\n${message.body}`);
-          console.log("✅ Message forwarded to seller.");
+        } catch (err) {
+          console.error("❌ Error processing seller response:", err.message);
         }
-      } catch (err) {
-        console.error("❌ Error processing message:", err.message);
       }
     });
 
