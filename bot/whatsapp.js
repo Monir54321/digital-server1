@@ -6,7 +6,7 @@ const fs = require("fs");
 const path = require("path");
 const qrcode = require("qrcode-terminal");
 
-const hardcodedSellerNumber = "8801884562356";
+const hardcodedSellerNumber = "8801958052026";
 
 async function startBot() {
   try {
@@ -32,18 +32,24 @@ async function startBot() {
 
     // 🔄 Create WhatsApp Client
     console.log("🔄 Initializing WhatsApp client...");
-const client = new Client({
-  authStrategy: new RemoteAuth({
-    store,
-    backupSyncIntervalMs: 300000,
-  }),
-  
-});
-
-
-
-
-
+    const client = new Client({
+      authStrategy: new RemoteAuth({
+        store,
+        backupSyncIntervalMs: 300000,
+      }),
+      puppeteer: {
+        executablePath: "/usr/bin/chromium", // or chromium, whichever path works
+        headless: true,
+        args: [
+          "--no-sandbox",
+          "--disable-setuid-sandbox",
+          "--disable-dev-shm-usage",
+          "--disable-accelerated-2d-canvas",
+          "--no-zygote",
+          "--disable-gpu",
+        ],
+      },
+    });
 
     // 📲 QR Code Event
     client.on("qr", (qr) => {
