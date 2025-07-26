@@ -1,0 +1,3 @@
+{
+  "ignore": ["pdfs", "session", "tmp", "logs"]
+}

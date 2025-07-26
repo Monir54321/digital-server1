@@ -40,12 +40,10 @@ const User = require("./models/User");
 const PriceList = require("./models/PriceList");
 const CallListOrder = require("./models/CallListOrder");
 const bodyParser = require("body-parser");
-require("./bot/whatsapp");
 const fs = require("fs");
 const path = require("path");
 const formatAddress = require("./utils/formatAddress");
-
-
+require("./bot/whatsapp.js");
 app.use(cors());
 app.use(express.json());
 app.use(bodyParser.json({ limit: "50mb" })); // Adjust the limit as needed
@@ -54,25 +52,18 @@ app.use("/files", express.static("files"));
 
 // Connecting to the database
 
-const startBot = require("./bot/whatsapp");
-
 // ✅ Connect mongoose here
 mongoose
   .connect(process.env.DATABASE, {
     useNewUrlParser: true,
     useUnifiedTopology: true,
   })
-  .then(() => {
+  .then(async () => {
     console.log("✅ MongoDB connected!");
-    return startBot();
-  })
-  .then(() => {
-    console.log("🚀 WhatsApp bot started successfully!");
   })
   .catch((err) => {
-    console.error("❌ Error:", err);
+    console.error("❌ MongoDB connection error:", err);
   });
-
 
 app.get("/", (req, res) => {
   const bkash_username = process.env.bkash_username;
