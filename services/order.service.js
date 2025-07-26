@@ -41,22 +41,28 @@ const parseMultipleOrders = (text) => {
   return orders;
 };
 
-const createOrder = async (buyer, text) => {
+const createOrder = async (
+  buyer,
+  text,
+  forwardedMessageId,
+  sellerForwardedId
+) => {
   const session = await mongoose.startSession();
   session.startTransaction();
 
   try {
     const ordersData = parseMultipleOrders(text);
 
-
     const ordersToCreate = ordersData.map(({ orderNumber, name }) => ({
       buyer,
       orderNumber,
       name,
       status: "Pending",
+      forwardedMessageId,
+      sellerForwardedId,
     }));
 
-    console.log("Creating orders:", ordersToCreate);
+  
 
     const orders = await Order.create(ordersToCreate, {
       session,
@@ -85,7 +91,7 @@ const processSellerResponse = async (orderNumber, pdfFileName, status) => {
   try {
     const order = await Order.findOne({ orderNumber }).session(session);
     if (!order) {
-      console.log("❌ No order found for number:", orderNumber);
+     
       throw new Error("Order not found");
     }
 
@@ -113,8 +119,39 @@ const processSellerResponse = async (orderNumber, pdfFileName, status) => {
     throw err;
   }
 };
+const findBuyerByReactedMessage = async (reactedMessageBody) => {
+ 
+
+  if (!reactedMessageBody) {
+  
+    throw new Error("Reacted message body is required");
+  }
+
+  const orderNumberMatch = reactedMessageBody.match(/\d+/);
+  console.log("🔢 Extracted order number match:", orderNumberMatch);
+
+  if (!orderNumberMatch) {
+   
+    throw new Error("No order number found in reacted message body");
+  }
+
+  const orderNumber = orderNumberMatch[0];
+ 
+
+  const order = await Order.findOne({ orderNumber });
+  
+
+  if (!order) {
+    console.log(`❌ Order not found for number: ${orderNumber}`);
+    throw new Error(`Order not found for number: ${orderNumber}`);
+  }
+
+  console.log("👤 Returning buyer:", order.buyer);
+  return order.buyer;
+};
 
 module.exports = {
   createOrder,
   processSellerResponse,
+  findBuyerByReactedMessage,
 };

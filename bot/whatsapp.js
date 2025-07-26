@@ -8,6 +8,27 @@ const qrcode = require("qrcode-terminal");
 const Order = require("../models/order.model");
 
 const hardcodedSellerNumber = "8801958052026";
+const messageMap = {};
+const botStartTime = Date.now();
+
+const markSeen = async (message) => {
+  try {
+    const chat = await message.getChat();
+
+    // Delay slightly to ensure WhatsApp is ready
+    setTimeout(async () => {
+      try {
+        await chat.sendSeen();
+     
+      } catch (err) {
+        console.error("Failed to mark as seen:", err.message);
+      }
+    }, 500);
+  } catch (err) {
+    console.error("Error in markSeen:", err.message);
+  }
+};
+
 
 const getBuyerByOrderNumber = async (orderNumber) => {
   const order = await Order.findOne({ orderNumber });
@@ -20,34 +41,31 @@ const getBuyerByOrderNumber = async (orderNumber) => {
 
 async function startBot() {
   try {
-    console.log("🚀 Starting WhatsApp bot...");
+   
 
-    // ✅ Check MongoDB Connection
-    console.log("🔄 Checking MongoDB connection...");
+    
     if (mongoose.connection.readyState !== 1) {
       console.error(
         "❌ Mongoose is NOT connected! Please connect to MongoDB before starting the bot."
       );
       throw new Error("Mongoose is not connected");
     }
-    console.log("✅ MongoDB is connected!");
+  
 
     // 🔄 Setup WhatsApp Store
-    console.log("🔄 Setting up MongoStore...");
+   
     const store = new MongoStore({
       mongoose: mongoose,
       session: "whatsapp-session",
     });
-    
 
-  
     const client = new Client({
       authStrategy: new RemoteAuth({
         store,
         backupSyncIntervalMs: 300000,
       }),
       puppeteer: {
-        executablePath: "/usr/bin/chromium", 
+        // executablePath: "/usr/bin/chromium",
         headless: true,
         args: [
           "--no-sandbox",
@@ -78,7 +96,8 @@ async function startBot() {
 
     // 📥 Message Event
     client.on("message", async (message) => {
-      if (message.fromMe) return; // Ignore bot’s own messages
+      if (message.fromMe) return;
+      markSeen(message);
 
       const sellerJid = `${hardcodedSellerNumber}@c.us`;
       const isFromSeller = message.from === sellerJid;
@@ -91,15 +110,34 @@ async function startBot() {
 
         try {
           // Save order to backend
-          const response = await axios.post("http://localhost:3000/orders", {
-            buyer: message.from,
-            text: message.body,
-          });
+      
 
-          const { order } = response.data;
+          
 
           // ✅ Forward text to seller only once
-          await client.sendMessage(sellerJid, `\n${message.body}`);
+          const chat = await message.getChat();
+         
+          
+
+            const forwardedMsg = await client.sendMessage(
+              sellerJid,
+              `\n${message.body}`
+            );
+
+            // 2. Store mapping (for reactions)          
+
+            // 3. Save both message IDs in database
+            const response = await axios.post("http://localhost:3000/orders", {
+              buyer: message.from,
+              text: message.body,
+              forwardedMessageId: message.id._serialized, // original buyer msg id
+              sellerForwardedId: forwardedMsg.id._serialized, // forwarded msg id
+            });
+
+            const { order } = response.data;
+
+             await chat.sendSeen();
+           
         } catch (err) {
           console.error("❌ Error saving order:", err.message);
         }
@@ -112,7 +150,7 @@ async function startBot() {
         }
 
         const media = await message.downloadMedia();
-
+        await client.sendSeen(message.from);
         // Extract order number
         const orderNumberMatch = message.body?.match(/\d+/);
         const orderNumber = orderNumberMatch ? orderNumberMatch[0] : null;
@@ -155,9 +193,87 @@ async function startBot() {
       }
     });
 
-    console.log("🤖 Initializing WhatsApp client...");
+    // =======================================
+    // Reaction Handling
+    // =======================================
+   client.on("message_reaction", async (reaction) => {
+     
+
+     const sellerJid = `${hardcodedSellerNumber}@c.us`;
+     const sender = reaction.id.participant || reaction.id.remote;
+     
+
+     // Only process reactions sent by seller
+     if (sender !== sellerJid) {
+     
+       return;
+     }
+
+     try {
+     
+       const originalMsg = await client.getMessageById(
+         reaction.msgId._serialized
+       );
+
+       // First, check if we have it in memory
+       let buyerMsgId = messageMap[originalMsg.id._serialized];
+       let buyer;
+
+       if (!buyerMsgId) {
+         // If no mapping in memory, check backend
+         console.log(
+           "📡 No mapping found. Calling backend /orders/find-buyer..."
+         );
+
+         const res = await axios.post(
+           "http://localhost:3000/orders/find-buyer",
+           {
+             forwardedMessageId: originalMsg.id._serialized, // sellerForwardedId
+           }
+         );
+
+      
+
+         buyer = res.data?.buyer;
+         buyerMsgId = res.data?.buyerMsgId; // NOTE: must match API response field
+
+         if (!buyer || !buyerMsgId) {
+          
+           return;
+         }
+       }
+
+       // Fetch the buyer's original message using ID
+       const buyerMsg = await client.getMessageById(buyerMsgId);
+       if (!buyerMsg) {
+         
+         return;
+       }
+
+       // Extract emoji from reaction
+       const emoji =
+         typeof reaction.reaction === "string"
+           ? reaction.reaction
+           : reaction.reaction?.toString?.() || "";
+
+       if (!emoji) {
+        
+         return;
+       }
+
+      
+       await buyerMsg.react(emoji);
+       
+     } catch (err) {
+       console.error("❌ Error forwarding reaction:", err.message);
+     }
+   });
+
+
+
+   
     await client.initialize();
-    console.log("✅ WhatsApp client initialized successfully!");
+   
     return client;
   } catch (err) {
     console.error("🔥 Bot failed to start:", err.message);

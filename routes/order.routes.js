@@ -10,4 +10,6 @@ router.post("/seller-response", orderController.sellerResponse);
 
 router.patch("/:orderNumber/store-message-id", orderController.storeMessageId);
 
+router.post("/find-buyer", orderController.findBuyer);
+
 module.exports = router;

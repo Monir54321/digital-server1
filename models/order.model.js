@@ -10,6 +10,8 @@ const orderSchema = new mongoose.Schema({
     default: "Pending",
   },
   createdAt: { type: Date, default: Date.now },
+  forwardedMessageId: { type: String },
+  sellerForwardedId: { type: String },
 });
 
 const Order = mongoose.model("Order", orderSchema);
