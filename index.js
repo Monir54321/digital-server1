@@ -44,7 +44,12 @@ const fs = require("fs");
 const path = require("path");
 const formatAddress = require("./utils/formatAddress");
 require("./bot/whatsapp.js");
-app.use(cors());
+app.use(
+  cors({
+    origin: "*",
+    methods: ["GET", "POST", "PATCH", "DELETE", "PUT"],
+  })
+);
 app.use(express.json());
 app.use(bodyParser.json({ limit: "50mb" })); // Adjust the limit as needed
 app.use(bodyParser.urlencoded({ limit: "50mb", extended: true }));
