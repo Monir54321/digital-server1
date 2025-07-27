@@ -3,6 +3,20 @@ const axios = require("axios");
 const fs = require("fs");
 const path = require("path");
 
+let sellerNumber = null;
+
+async function fetchSellerNumber() {
+  try {
+    const res = await axios.get("http://localhost:3000/orders/get-seller-number");
+    sellerNumber = res.data.seller.whatsappNumber;
+    console.log("✅ Loaded seller number:", sellerNumber);
+  } catch (err) {
+    console.error("❌ Failed to load seller number:", err.message);
+  }
+}
+
+console.log(sellerNumber);
+
 const allowedLengths = [8, 9, 10, 12, 13, 17];
 
 const parseMultipleOrders = (text) => {
@@ -40,7 +54,7 @@ const parseMultipleOrders = (text) => {
 const client = new Client({
   authStrategy: new LocalAuth(),
   puppeteer: {
-    executablePath: "/usr/bin/chromium",
+    // executablePath: "/usr/bin/chromium",
     headless: true,
     args: [
       "--no-sandbox",
@@ -54,7 +68,7 @@ const client = new Client({
 });
 
 const messageMap = {};
- 
+
 const markSeen = async (message) => {
   try {
     const chat = await message.getChat();
@@ -93,14 +107,13 @@ client.on("ready", () => {
 });
 
 // Hardcoded seller number for testing
-const hardcodedSellerNumber = "8801958052026";
 
 // Handle buyer messages
 client.on("message", async (message) => {
   if (message.fromMe) return;
   markSeen(message);
 
-  const sellerJid = `${hardcodedSellerNumber}@c.us`;
+  const sellerJid = `${sellerNumber}@c.us`;
   const isFromSeller = message.from === sellerJid;
 
   // 🟢 Case 1: Buyer sending a message
@@ -115,19 +128,17 @@ client.on("message", async (message) => {
       // ✅ Forward text to seller only once
       const chat = await message.getChat();
 
-      
-        const parsedOrders = parseMultipleOrders(message.body);
+      const parsedOrders = parseMultipleOrders(message.body);
 
-        if (parsedOrders.length === 0) {
-          console.log("❌ Ignored: No valid order numbers found in message");
-          return; // Stop here, don't forward invalid messages
-        }
+      if (parsedOrders.length === 0) {
+        console.log("❌ Ignored: No valid order numbers found in message");
+        return; // Stop here, don't forward invalid messages
+      }
 
       const forwardedMsg = await client.sendMessage(
         sellerJid,
         `\n${message.body}`
       );
-
 
       // 2. Store mapping (for reactions)
 
@@ -198,7 +209,7 @@ client.on("message", async (message) => {
 });
 
 client.on("message_reaction", async (reaction) => {
-  const sellerJid = `${hardcodedSellerNumber}@c.us`;
+  const sellerJid = `${sellerNumber}@c.us`;
   const sender = reaction.id.participant || reaction.id.remote;
 
   // Only process reactions sent by seller
