@@ -3,20 +3,6 @@ const axios = require("axios");
 const fs = require("fs");
 const path = require("path");
 
-let sellerNumber = null;
-
-async function fetchSellerNumber() {
-  try {
-    const res = await axios.get("http://localhost:3000/orders/get-seller-number");
-    sellerNumber = res.data.seller.whatsappNumber;
-    console.log("✅ Loaded seller number:", sellerNumber);
-  } catch (err) {
-    console.error("❌ Failed to load seller number:", err.message);
-  }
-}
-
-console.log(sellerNumber);
-
 const allowedLengths = [8, 9, 10, 12, 13, 17];
 
 const parseMultipleOrders = (text) => {
@@ -31,18 +17,12 @@ const parseMultipleOrders = (text) => {
     const idMatch = line.match(/\d+/);
     const orderNumber = idMatch ? idMatch[0] : null;
 
-    if (!orderNumber || !allowedLengths.includes(orderNumber.length)) {
-      continue;
-    }
+    if (!orderNumber || !allowedLengths.includes(orderNumber.length)) continue;
 
     const nameMatch = line.match(/Name[:-]?\s*([^,]+)/i);
-    let name = null;
-
-    if (nameMatch) {
-      name = nameMatch[1].trim();
-    } else {
-      name = line.replace(orderNumber, "").trim();
-    }
+    let name = nameMatch
+      ? nameMatch[1].trim()
+      : line.replace(orderNumber, "").trim();
 
     orders.push({ orderNumber, name });
   }
@@ -50,11 +30,22 @@ const parseMultipleOrders = (text) => {
   return orders;
 };
 
-// Initialize WhatsApp client
+async function getSellerNumber() {
+  try {
+    const res = await axios.get(
+      "http://localhost:3000/orders/get-seller-number"
+    );
+    return res.data?.seller?.whatsappNumber || null;
+  } catch (err) {
+    console.error("❌ Failed to fetch seller number:", err.message);
+    return null;
+  }
+}
+
 const client = new Client({
   authStrategy: new LocalAuth(),
   puppeteer: {
-    // executablePath: "/usr/bin/chromium",
+    executablePath: "/usr/bin/chromium",
     headless: true,
     args: [
       "--no-sandbox",
@@ -72,8 +63,6 @@ const messageMap = {};
 const markSeen = async (message) => {
   try {
     const chat = await message.getChat();
-
-    // Delay slightly to ensure WhatsApp is ready
     setTimeout(async () => {
       try {
         await chat.sendSeen();
@@ -86,106 +75,80 @@ const markSeen = async (message) => {
   }
 };
 
-const getBuyerByOrderNumber = async (orderNumber) => {
-  const order = await Order.findOne({ orderNumber });
-  if (!order) {
-    console.log("❌ No order found for number:", orderNumber);
-    throw new Error("Order not found");
-  }
-  return order.buyer;
-};
-
-// Scan QR Code
 client.on("qr", (qr) => {
   console.log("📲 Scan this QR code to log in:");
   require("qrcode-terminal").generate(qr, { small: true });
 });
 
-// Bot ready
 client.on("ready", () => {
   console.log("✅ WhatsApp Bot is ready!");
 });
 
-// Hardcoded seller number for testing
-
-// Handle buyer messages
 client.on("message", async (message) => {
   if (message.fromMe) return;
-  markSeen(message);
+
+  // Fetch seller number every time
+  const sellerNumber = await getSellerNumber();
+  if (!sellerNumber) {
+    console.log("❌ No seller number available. Ignoring message.");
+    return;
+  }
 
   const sellerJid = `${sellerNumber}@c.us`;
   const isFromSeller = message.from === sellerJid;
 
-  // 🟢 Case 1: Buyer sending a message
+  markSeen(message);
+
+  // CASE 1: Buyer sends a message
   if (!isFromSeller) {
-    if (message.hasMedia) {
-      return; // Don’t forward buyer media
+    if (message.hasMedia) return;
+
+    const parsedOrders = parseMultipleOrders(message.body);
+    if (parsedOrders.length === 0) {
+      console.log("❌ Ignored: No valid order numbers found in message");
+      return;
     }
 
     try {
-      // Save order to backend
-
-      // ✅ Forward text to seller only once
       const chat = await message.getChat();
-
-      const parsedOrders = parseMultipleOrders(message.body);
-
-      if (parsedOrders.length === 0) {
-        console.log("❌ Ignored: No valid order numbers found in message");
-        return; // Stop here, don't forward invalid messages
-      }
-
       const forwardedMsg = await client.sendMessage(
         sellerJid,
         `\n${message.body}`
       );
 
-      // 2. Store mapping (for reactions)
-
-      // 3. Save both message IDs in database
-      const response = await axios.post("http://localhost:3000/orders", {
+      await axios.post("http://localhost:3000/orders", {
         buyer: message.from,
         text: message.body,
-        forwardedMessageId: message.id._serialized, // original buyer msg id
-        sellerForwardedId: forwardedMsg.id._serialized, // forwarded msg id
+        forwardedMessageId: message.id._serialized,
+        sellerForwardedId: forwardedMsg.id._serialized,
       });
-
-      const { order } = response.data;
 
       await chat.sendSeen();
     } catch (err) {
-      console.error("❌ Error saving order:", err.message);
+      console.error("❌ Error forwarding order:", err.message);
     }
   }
 
-  // 🟢 Case 2: Seller sending PDF/media
+  // CASE 2: Seller sends PDF/media
   else {
-    if (!message.hasMedia) {
-      return; // Don’t process seller text
-    }
+    if (!message.hasMedia) return;
 
     const media = await message.downloadMedia();
     await client.sendSeen(message.from);
-    // Extract order number
+
     const orderNumberMatch = message.body?.match(/\d+/);
     const orderNumber = orderNumberMatch ? orderNumberMatch[0] : null;
+    if (!orderNumber) return;
 
-    if (!orderNumber) {
-      return;
-    }
-
-    // Save PDF
     const pdfFolder = path.join(__dirname, "..", "pdfs");
     if (!fs.existsSync(pdfFolder)) {
       fs.mkdirSync(pdfFolder, { recursive: true });
     }
 
     const fileName = `${orderNumber}_${media.filename}`;
-    const filePath = path.join(pdfFolder, fileName);
-    fs.writeFileSync(filePath, media.data, "base64");
+    fs.writeFileSync(path.join(pdfFolder, fileName), media.data, "base64");
 
     try {
-      // Notify backend
       const response = await axios.post(
         "http://localhost:3000/orders/seller-response",
         {
@@ -196,12 +159,7 @@ client.on("message", async (message) => {
       );
 
       const { buyer } = response.data.order;
-
-      if (buyer) {
-        // Forward PDF to buyer
-        await client.sendMessage(buyer, media);
-      } else {
-      }
+      if (buyer) await client.sendMessage(buyer, media);
     } catch (err) {
       console.error("❌ Error processing seller response:", err.message);
     }
@@ -209,52 +167,35 @@ client.on("message", async (message) => {
 });
 
 client.on("message_reaction", async (reaction) => {
+  const sellerNumber = await getSellerNumber();
+  if (!sellerNumber) return;
+
   const sellerJid = `${sellerNumber}@c.us`;
   const sender = reaction.id.participant || reaction.id.remote;
-
-  // Only process reactions sent by seller
-  if (sender !== sellerJid) {
-    return;
-  }
+  if (sender !== sellerJid) return;
 
   try {
     const originalMsg = await client.getMessageById(reaction.msgId._serialized);
-
-    // First, check if we have it in memory
     let buyerMsgId = messageMap[originalMsg.id._serialized];
     let buyer;
 
     if (!buyerMsgId) {
-      // If no mapping in memory, check backend
-      console.log("📡 No mapping found. Calling backend /orders/find-buyer...");
-
       const res = await axios.post("http://localhost:3000/orders/find-buyer", {
-        forwardedMessageId: originalMsg.id._serialized, // sellerForwardedId
+        forwardedMessageId: originalMsg.id._serialized,
       });
-
       buyer = res.data?.buyer;
-      buyerMsgId = res.data?.buyerMsgId; // NOTE: must match API response field
-
-      if (!buyer || !buyerMsgId) {
-        return;
-      }
+      buyerMsgId = res.data?.buyerMsgId;
+      if (!buyer || !buyerMsgId) return;
     }
 
-    // Fetch the buyer's original message using ID
     const buyerMsg = await client.getMessageById(buyerMsgId);
-    if (!buyerMsg) {
-      return;
-    }
+    if (!buyerMsg) return;
 
-    // Extract emoji from reaction
     const emoji =
       typeof reaction.reaction === "string"
         ? reaction.reaction
         : reaction.reaction?.toString?.() || "";
-
-    if (!emoji) {
-      return;
-    }
+    if (!emoji) return;
 
     await buyerMsg.react(emoji);
   } catch (err) {
