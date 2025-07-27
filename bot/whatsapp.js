@@ -3,11 +3,44 @@ const axios = require("axios");
 const fs = require("fs");
 const path = require("path");
 
+const allowedLengths = [8, 9, 10, 12, 13, 17];
+
+const parseMultipleOrders = (text) => {
+  const lines = text
+    .split("\n")
+    .map((line) => line.trim())
+    .filter(Boolean);
+
+  const orders = [];
+
+  for (const line of lines) {
+    const idMatch = line.match(/\d+/);
+    const orderNumber = idMatch ? idMatch[0] : null;
+
+    if (!orderNumber || !allowedLengths.includes(orderNumber.length)) {
+      continue;
+    }
+
+    const nameMatch = line.match(/Name[:-]?\s*([^,]+)/i);
+    let name = null;
+
+    if (nameMatch) {
+      name = nameMatch[1].trim();
+    } else {
+      name = line.replace(orderNumber, "").trim();
+    }
+
+    orders.push({ orderNumber, name });
+  }
+
+  return orders;
+};
+
 // Initialize WhatsApp client
 const client = new Client({
   authStrategy: new LocalAuth(),
   puppeteer: {
-    executablePath: "/usr/bin/chromium",
+    // executablePath: "/usr/bin/chromium",
     headless: true,
     args: [
       "--no-sandbox",
@@ -82,10 +115,19 @@ client.on("message", async (message) => {
       // ✅ Forward text to seller only once
       const chat = await message.getChat();
 
+      
+        const parsedOrders = parseMultipleOrders(message.body);
+
+        if (parsedOrders.length === 0) {
+          console.log("❌ Ignored: No valid order numbers found in message");
+          return; // Stop here, don't forward invalid messages
+        }
+
       const forwardedMsg = await client.sendMessage(
         sellerJid,
         `\n${message.body}`
       );
+
 
       // 2. Store mapping (for reactions)
 
