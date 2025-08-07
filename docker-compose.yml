@@ -10,19 +10,13 @@ services:
       - .env
     restart: unless-stopped
 
-    # Recommended resource limits
-    deploy:
-      resources:
-        limits:
-          memory: 1g
-          cpus: '2'  # optional: limit CPU usage
-        reservations:
-          memory: 512m
+    # ✅ Enforce resource limits
+    mem_limit: 1g
+    cpus: 2.0
 
-    # Optional: health check to auto-restart on Chromium crash
+    # ✅ Optional: safer health check
     healthcheck:
-      test: ["CMD-SHELL", "curl --fail http://localhost:3000 || exit 1"]
-      interval: 1m30s
+      test: ["CMD-SHELL", "pgrep -f chromium || exit 1"]
+      interval: 1m
       timeout: 10s
-      retries: 3
-      start_period: 40s
+      retries: 3
