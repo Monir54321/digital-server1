@@ -51,12 +51,27 @@ const client = new Client({
       "--no-sandbox",
       "--disable-setuid-sandbox",
       "--disable-dev-shm-usage",
-      "--disable-accelerated-2d-canvas",
-      "--no-zygote",
       "--disable-gpu",
+      "--disable-web-security",
+      "--enable-gpu",
+      "--disable-background-timer-throttling",
+      "--disable-renderer-backgrounding",
+      "--disable-extensions",
+      "--disable-translate",
+      "--disable-features=BackForwardCache",
     ],
   },
 });
+
+// Send WhatsApp notification when called from backend
+async function sendOrderNotification(orderNumber, customerName, details) {
+  const sellerNumber = await getSellerNumber();
+  if (!sellerNumber) throw new Error("No seller number available");
+  const sellerJid = `${sellerNumber}@c.us`;
+  let message = `🛒 New Order Received!\nOrder Number: ${orderNumber}\nCustomer: ${customerName}`;
+  if (details) message += `\nDetails: ${details}`;
+  await client.sendMessage(sellerJid, message);
+}
 
 const messageMap = {};
 
@@ -207,3 +222,4 @@ client.on("message_reaction", async (reaction) => {
 client.initialize();
 
 module.exports = client;
+module.exports.sendOrderNotification = sendOrderNotification;

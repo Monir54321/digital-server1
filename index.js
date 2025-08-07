@@ -35,6 +35,7 @@ const whatsAppWebhookRoutes = require("./routes/whatsappWebhook.routes");
 const dashboardRoutes = require("./routes/dashboard.routes");
 const automationRoutes = require("./routes/automation.routes");
 const orderRoutes = require("./routes/order.routes");
+const notifyOrderRoutes = require("./routes/notifyOrder.routes");
 const { default: axios } = require("axios");
 const User = require("./models/User");
 const PriceList = require("./models/PriceList");
@@ -710,6 +711,8 @@ app.use("/sellers", sellerRoutes);
 app.use("/whatsapp-webhook", whatsAppWebhookRoutes);
 app.use("/dashboard", dashboardRoutes);
 app.use("/automation", automationRoutes);
+
+app.use("/notify", notifyOrderRoutes);
 app.use("/orders", orderRoutes);
 
 app.listen(PORT, () => console.log(`Server started on port ${PORT}`));
