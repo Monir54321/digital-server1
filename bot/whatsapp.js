@@ -45,7 +45,7 @@ async function getSellerNumber() {
 const client = new Client({
   authStrategy: new LocalAuth(),
   puppeteer: {
-    // executablePath: "/usr/bin/chromium",
+    executablePath: "/usr/bin/chromium",
     headless: true,
     args: [
       "--no-sandbox",
