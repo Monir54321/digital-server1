@@ -45,20 +45,15 @@ async function getSellerNumber() {
 const client = new Client({
   authStrategy: new LocalAuth(),
   puppeteer: {
-    executablePath: "/usr/bin/chromium",
+    // executablePath: "/usr/bin/chromium",
     headless: true,
     args: [
       "--no-sandbox",
       "--disable-setuid-sandbox",
       "--disable-dev-shm-usage",
+      "--disable-accelerated-2d-canvas",
+      "--no-zygote",
       "--disable-gpu",
-      "--disable-web-security",
-      "--enable-gpu",
-      "--disable-background-timer-throttling",
-      "--disable-renderer-backgrounding",
-      "--disable-extensions",
-      "--disable-translate",
-      "--disable-features=BackForwardCache",
     ],
   },
 });
