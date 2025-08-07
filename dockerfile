@@ -23,23 +23,9 @@ RUN apt-get update && apt-get install -y \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
-# Set working directory
-WORKDIR /app
 
-# Copy package files
-COPY package*.json ./
 
-# Install dependencies
-RUN npm install
+ENV NODE_OPTIONS=--max-old-space-size=256
 
-# Copy project files
-COPY . .
 
-# Copy env file
-COPY .env .env
-
-# Expose app port
-EXPOSE 3000
-
-# Start the app
-CMD ["npm", "run", "dev"]
+# Set workin

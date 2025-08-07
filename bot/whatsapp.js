@@ -42,11 +42,13 @@ async function getSellerNumber() {
   }
 }
 
+
+//  new code 
 const client = new Client({
   authStrategy: new LocalAuth(),
   puppeteer: {
     executablePath: "/usr/bin/chromium",
-    headless: true,
+    headless: "new",
     args: [
       "--no-sandbox",
       "--disable-setuid-sandbox",
@@ -57,9 +59,29 @@ const client = new Client({
       "--no-zygote",
       "--single-process",
       "--disable-extensions",
+      "--remote-debugging-port=9222",
     ],
   },
 });
+
+// const client = new Client({
+//   authStrategy: new LocalAuth(),
+//   puppeteer: {
+//     // executablePath: "/usr/bin/chromium",
+//     headless: true,
+//     args: [
+//       "--no-sandbox",
+//       "--disable-setuid-sandbox",
+//       "--disable-dev-shm-usage",
+//       "--disable-accelerated-2d-canvas",
+//       "--disable-gpu",
+//       "--no-first-run",
+//       "--no-zygote",
+//       "--single-process",
+//       "--disable-extensions",
+//     ],
+//   },
+// });
 
 // Send WhatsApp notification when called from backend
 async function sendOrderNotification(orderNumber, customerName, details) {
