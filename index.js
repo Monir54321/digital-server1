@@ -620,7 +620,7 @@ app.get("/channelTwo", async (req, res) => {
   }
 });
 
-app.get("/api/nid2", async (req, res) => {
+app.get("/api/nid2", async (req, res) => { 
   const { nid, dob } = req.query;
   try {
     const fetch = (await import("node-fetch")).default;
@@ -637,12 +637,12 @@ app.get("/api/nid2", async (req, res) => {
 
 // api for reduce amount for auto nid
 app.post("/autoNid", async (req, res) => {
-  console.log("req autoNid ", req?.body);
+  // console.log("req autoNid ", req?.body);
   const data = req.body;
   // Validate input
   if (!data || !data.email) {
     return res
-      .status(400)
+      .status(400) 
       .json({ error: "Invalid request: Email is required." });
   }
 

@@ -42,12 +42,18 @@ async function getSellerNumber() {
   }
 }
 
+const sendAndMarkSeen = async (jid, content, options = {}) => {
+  const msg = await client.sendMessage(jid, content, options);
+  const chat = await msg.getChat();
+  await chat.sendSeen();
+  return msg;
+};
 
-//  new code 
+//  new code
 const client = new Client({
   authStrategy: new LocalAuth(),
   puppeteer: {
-    executablePath: "/usr/bin/chromium",
+    // executablePath: "/usr/bin/chromium",
     headless: "new",
     args: [
       "--no-sandbox",
@@ -95,18 +101,19 @@ async function sendOrderNotification(orderNumber, customerName, details) {
 
 const messageMap = {};
 
-const markSeen = async (message) => {
+const markAllSeen = async (message, delay = 5000) => {
   try {
     const chat = await message.getChat();
     setTimeout(async () => {
       try {
         await chat.sendSeen();
+        console.log(`✅ Marked as seen after ${delay / 1000}s`);
       } catch (err) {
-        console.error("Failed to mark as seen:", err.message);
+        console.error("❌ Failed to mark message as seen:", err.message);
       }
-    }, 500);
+    }, delay);
   } catch (err) {
-    console.error("Error in markSeen:", err.message);
+    console.error("❌ Error in markAllSeen:", err.message);
   }
 };
 
@@ -132,8 +139,6 @@ client.on("message", async (message) => {
   const sellerJid = `${sellerNumber}@c.us`;
   const isFromSeller = message.from === sellerJid;
 
-  markSeen(message);
-
   // CASE 1: Buyer sends a message
   if (!isFromSeller) {
     if (message.hasMedia) return;
@@ -146,7 +151,7 @@ client.on("message", async (message) => {
 
     try {
       const chat = await message.getChat();
-      const forwardedMsg = await client.sendMessage(
+      const forwardedMsg = await sendAndMarkSeen(
         sellerJid,
         `\n${message.body}`
       );
@@ -158,7 +163,7 @@ client.on("message", async (message) => {
         sellerForwardedId: forwardedMsg.id._serialized,
       });
 
-      await chat.sendSeen();
+      markAllSeen(message);
     } catch (err) {
       console.error("❌ Error forwarding order:", err.message);
     }
@@ -169,7 +174,7 @@ client.on("message", async (message) => {
     if (!message.hasMedia) return;
 
     const media = await message.downloadMedia();
-    await client.sendSeen(message.from);
+    // await client.sendSeen(message.from);
 
     const orderNumberMatch = message.body?.match(/\d+/);
     const orderNumber = orderNumberMatch ? orderNumberMatch[0] : null;
